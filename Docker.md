@@ -163,5 +163,134 @@ Docker Hub
 
 
 
+#### 回顾hello world流程
 
+![Screenshot 2020-10-25 at 23.18.14](/Users/guohuanjie/Documents/programming/LearnNote/image/Screenshot 2020-10-25 at 23.18.14.png)
+
+
+
+#### 底层原理
+
+**docker如何工作？**
+
+Docker是一个client-server结构系统，Docker的守护进行运行在主机上。通过socket从客户端访问
+
+DockerServer接收到client命令，
+
+![Screenshot 2020-10-25 at 23.24.59](/Users/guohuanjie/Documents/programming/LearnNote/image/Screenshot 2020-10-25 at 23.24.59.png)
+
+
+
+**Docker为什么比虚拟机快**
+
+1、Docker有着比虚拟机更少的抽象层
+
+2、docker利用宿主机内核，vm需要加载 guest os
+
+3、docker秒级  vm分钟级
+
+![Screenshot 2020-10-25 at 23.26.57](/Users/guohuanjie/Documents/programming/LearnNote/image/Screenshot 2020-10-25 at 23.26.57.png)
+
+### Docker常用命令
+
+#### 帮助命令
+
+```
+docker version
+docker info # 镜像和容器数量，信息
+dicker --help
+```
+
+
+
+#### 镜像命令
+
+docker images 
+
+```shell
+[root@localhost yum.repos.d]# docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+
+# 解释
+REPOSITORY  镜像的仓库源
+TAG 				标签
+IMAGE ID		ID
+CREATED			创建时间
+SIZE 				大小
+
+[root@localhost yum.repos.d]# docker images --help
+Usage:	docker images [OPTIONS] [REPOSITORY[:TAG]]
+List images
+Options:
+  -a, --all             Show all images (default hides intermediate images)
+      --digests         Show digests
+  -f, --filter filter   Filter output based on conditions provided
+      --format string   Pretty-print images using a Go template
+      --no-trunc        Don't truncate output
+  -q, --quiet           Only show numeric IDs
+  
+```
+
+**docker search **
+
+```shell
+[root@localhost yum.repos.d]# docker search mysql
+NAME                              DESCRIPTION                                     STARS               OFFICIAL            AUTOMATED
+mysql                             MySQL is a widely used, open-source relation…   10099               [OK]
+mariadb                           MariaDB is a community-developed fork of MyS…   3705                [OK]
+mysql/mysql-server                Optimized MySQL Server Docker images. Create…   737
+
+# 可选项
+[root@localhost yum.repos.d]# docker search --help
+
+Usage:	docker search [OPTIONS] TERM
+
+Search the Docker Hub for images
+
+Options:
+  -f, --filter filter   Filter output based on conditions provided
+      --format string   Pretty-print search using a Go template
+      --limit int       Max number of search results (default 25)
+      --no-trunc        Don't truncate output
+```
+
+**docker pull 下载镜像**
+
+分层下载，比如一个docker需要10个配件，之前安装过6个，下载新的时，只会下载4个
+
+```shell
+[root@localhost yum.repos.d]# docker pull --help
+
+Usage:	docker pull [OPTIONS] NAME[:TAG|@DIGEST]
+
+Pull an image or a repository from a registry
+
+Options:
+  -a, --all-tags                Download all tagged images in the repository
+      --disable-content-trust   Skip image verification (default true)
+      --platform string         Set platform if server is multi-platform capable
+  -q, --quiet                   Suppress verbose output
+```
+
+
+
+**docker rmi 删除镜像**
+
+```shell
+[root@localhost yum.repos.d]# docker rmi --help
+
+Usage:	docker rmi [OPTIONS] IMAGE [IMAGE...]
+
+Remove one or more images
+
+Options:
+  -f, --force      Force removal of the image
+      --no-prune   Do not delete untagged parents
+```
+
+
+
+
+
+#### 容器命令
 

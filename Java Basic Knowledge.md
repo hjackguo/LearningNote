@@ -293,5 +293,121 @@ Java容器分为Collection和Map两大类，其下面又有很多子类。
 
 #### 19.Collection和Collections有什么区别?
 
-- Collection是一个集合接口，它提供了对集合对象
--  
+- Collection是一个集合接口，它提供了对集合对象进行基本操作的通用接口方法，所有集合都是它的子类，比如List、Set等。
+- Collections是一个包装类，包含了很多静态方法，不能被实例化，就像一个工具类，比如提供的排序方法：Collections.sort(list)。
+
+#### 20.List、Set、Map之间的区别是什么？
+
+List、Set、Map的区别主要体现在两个方面：元素**是否有序**、是否允许元素**重复**。
+
+![Screenshot 2020-11-20 at 00.26.42](/Users/guohuanjie/Documents/programming/LearnNote/image/Screenshot 2020-11-20 at 00.26.42.png)
+
+#### 21.HashMap和HashTable有什么区别
+
+- 存储：HashMap允许key和value为null，而Hashtable不允许
+
+```java
+        // HashMap
+				Map map = new HashMap<>();
+        map.put(null,1);
+        System.out.println(map);  // {null=1}
+        System.out.println(map.get(null));  //1
+```
+
+```java
+        // Hashtable
+				Map map = new Hashtable();
+        map.put(1,null);
+// Exception in thread "main" java.lang.NullPointerException
+	at java.base/java.util.Hashtable.put(Hashtable.java:476)
+
+    
+        Map map = new Hashtable();
+        map.put(null,1);
+//Exception in thread "main" java.lang.NullPointerException: Cannot invoke "Object.hashCode()" because "key" is null
+	at java.base/java.util.Hashtable.put(Hashtable.java:481)
+```
+
+- 线程安全： Hashtable是**线程安全**的，而HashMap是**非线程安全**的。
+- 推荐使用：Hashtable是保留类**不建议使用**，推荐在**单线程**环境下使用**HashMap**替代。,**多线程**使用**ConcurrentHashMap**替代。
+
+#### 22.如何决定使用HashMap还是TreeMap?
+
+对于在Map中**插入、删除、定位**一个元素这类操作，**HashMap**是最好的选择，因为相对而言HashMap插入会更快，但如果你要对一个**Key集合进行有序遍历**，那**TreeMap**是更好的选择。
+
+#### 23.说一下HashMap的实现原理？
+
+HashMap = Node**数组** + **链表或红黑树**
+
+HashMap基于**Hash算法**实现的，我们通过**put**(key,value)存储，**get**(key)来获取。当传入key时，HashMap会根据**key.hashCode()**计算出hash值，根据Hash值将value保存在bucket里。当计算出的**hash相同**时，我们称之为**hash冲突**，HashMap的做法是用链表和红黑树存储相同hash值的value。当hash冲突**个数少**时，使用**链表**，**个数超过8**使用**红黑树**。
+
+![1414839-20200411170135520-938948148](/Users/guohuanjie/Documents/programming/LearnNote/image/1414839-20200411170135520-938948148.png)
+
+#### 24.说一下HashSet的实现原理？
+
+HashSet是基于HashMap实现的，HashSet**底层使用HashMap**来保存所有元素，因此HashSet的实现比较简单，相关HashSet的操作，基本上都是直接调用底层HashMap相关方法来完成，HashSet**不允许重复的值**。
+
+#### 25.ArrayList和LinkedList的区别是什么？
+
+- 数据结构实现：ArrayList是**动态数组**的数据结构实现，实例化一个ArrayList的时候，默认开辟size=**10**，**扩容**时新建**1.5**倍空间，复制过去。而LinkedList是**双向链表**的数据结构实现。
+- 随机访问效率：**ArrayList**比LinkedList在**随机访问**的时候**效率更高**，因为LinkedList是线性的数据存储方式，所以需要移动指针从前往后依次查找。而ArrayList直接通过下标访问。
+- 增加和删除效率：在**非首位**的增加和删除操作，LinkedList要比ArrayList效率高，因为**ArrayList增删操作要影响数组内其它数据的下标**。
+
+Q.哪个更占用内存？
+
+一般情况下，LinkedList更占用内存。
+
+但如果大数据量情况下，ArrayList进行1.5倍扩容后，扩容空间只放了少量数据，ArrayList可能更加占用内存。
+
+#### 26.如何实现数组和List之间的转换？
+
+- 数组转List：使用Arrays.asList(array)转换
+- List转数组：使用List自带的toArray()方法。
+
+代码示例：
+
+```Java
+// list to array
+List<String> list = new ArrayList<String>();
+list. add("王磊");
+list. add("的博客");
+list. toArray();
+// array to list
+String[] array = new String[]{"王磊","的博客"};
+Arrays. asList(array);
+```
+
+#### 27.ArrayList和Vector的区别是什么？
+
+- 线程安全：**Vector**使用了**Synchronized**来实现**线程同步**，是**线程安全**的，而**ArrayList**是**非线程安全**的。
+- 性能：Array List在性能方面优于Vector。
+- 扩容：ArrayList和Vector都会根据实际的需要动态调整容量，只不过在**Vector**扩容每次会增加**1倍**，而**ArrayList**只会增加**50%**。
+
+#### 28.Array和ArrayList有何区别？
+
+- **Array**可以存储**基本数据类型和对象**，ArrayList只能存储**对象**。
+
+  ```java
+          // array存储基本数据类型
+          int [] a = new int[10];
+          // array存储对象
+          Integer[] b = new Integer[10];
+          // ArrayList存储对象
+          ArrayList<Integer> c = new ArrayList<>();
+  ```
+
+  
+
+- Array是指定固定大小的，而ArrayList大小是自动扩展的。
+
+- Array内置方法没有ArrayList多，比如addAll、removeAll、iteration等方法只有ArrayList有。
+
+#### 29.在Queue中poll()和remove()有什么区别？
+
+- 相同点：都是**返回第一个元素**，并在队列中**删除返回的对象**。
+- 不同点：如果没有元素**poll()**会**返回null**，而**remove()**会直接**抛出NoSuchElementException异常**。
+
+#### 30.哪些集合类是线程安全的？
+
+**Vector、HashTable、Stack都是线程安全**的，而像HashMap则是非线程安全的，不过在JDK1.5之后随着Java.util.concurrent并发包的出现，它们也有了自己对于的线程安全类，比如**HashMap对应的线程安全类**是**ConcurrentHashMap**。
+

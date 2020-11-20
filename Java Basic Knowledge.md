@@ -294,3 +294,4 @@ Java容器分为Collection和Map两大类，其下面又有很多子类。
 #### 19.Collection和Collections有什么区别?
 
 - Collection是一个集合接口，它提供了对集合对象
+- 

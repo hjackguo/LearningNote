@@ -341,7 +341,53 @@ HashMap = Node**数组** + **链表或红黑树**
 
 HashMap基于**Hash算法**实现的，我们通过**put**(key,value)存储，**get**(key)来获取。当传入key时，HashMap会根据**key.hashCode()**计算出hash值，根据Hash值将value保存在bucket里。当计算出的**hash相同**时，我们称之为**hash冲突**，HashMap的做法是用链表和红黑树存储相同hash值的value。当hash冲突**个数少**时，使用**链表**，**个数超过8**使用**红黑树**。
 
-![1414839-20200411170135520-938948148](/Users/guohuanjie/Documents/programming/LearnNote/image/1414839-20200411170135520-938948148.png)
+<img src="/Users/guohuanjie/Documents/programming/LearnNote/image/8db4a3bdfb238da1a1c4431d2b6e075c_1440w.png" alt="8db4a3bdfb238da1a1c4431d2b6e075c_1440w" style="zoom:50%;" />
+
+------
+
+**Node**
+
+```java
+static class Node<K,V> implements Map.Entry<K,V> {
+        final int hash;    //用来定位数组索引位置
+        final K key;
+        V value;
+        Node<K,V> next;   //链表的下一个node
+
+        Node(int hash, K key, V value, Node<K,V> next) { ... }
+        public final K getKey(){ ... }
+        public final V getValue() { ... }
+        public final String toString() { ... }
+        public final int hashCode() { ... }
+        public final V setValue(V newValue) { ... }
+        public final boolean equals(Object o) { ... }
+}
+```
+
+Node是HashMap的一个内部类，实现**Map.Entry**接口，本质就是一个**映射(键值对)**。
+
+------
+
+**Q.HashMap扩容机制**
+
+```java
+     int threshold;             // 所能容纳的key-value对极限 
+     final float loadFactor;    // 负载因子
+     int modCount;  						// 结构变化数
+     int size;                  // 实际键值对数量
+```
+
+Node[] table的初始化长度**length**(默认值**16**)，**LoadFactor**为负载因子(默认值**0.75**), **threshold**是HashMap容纳最大数据量的Node个数。
+
+**threshold = length*LoadFactor**
+
+如果存储超过threshold，需要重新**resize**(扩容)，扩容后HashMap容量是之前容量**两倍**。
+
+哈希桶数组table长度大小必须是**2的n次方**。目的：**取模**和**扩容**时优化。
+
+------
+
+
 
 #### 24.说一下HashSet的实现原理？
 
@@ -380,8 +426,17 @@ Arrays. asList(array);
 #### 27.ArrayList和Vector的区别是什么？
 
 - 线程安全：**Vector**使用了**Synchronized**来实现**线程同步**，是**线程安全**的，而**ArrayList**是**非线程安全**的。
-- 性能：Array List在性能方面优于Vector。
+
+- 性能：ArrayList在性能方面优于Vector。
+
 - 扩容：ArrayList和Vector都会根据实际的需要动态调整容量，只不过在**Vector**扩容每次会增加**1倍**，而**ArrayList**只会增加**50%**。
+
+  ```java
+  Vector<Integer> vec = new Vector<>();//Synchronized-线程同步
+  vec.add(1);
+  vec.add(2);
+  System.out.println(vec); //[1, 2]
+  ```
 
 #### 28.Array和ArrayList有何区别？
 
@@ -410,4 +465,96 @@ Arrays. asList(array);
 #### 30.哪些集合类是线程安全的？
 
 **Vector、HashTable、Stack都是线程安全**的，而像HashMap则是非线程安全的，不过在JDK1.5之后随着Java.util.concurrent并发包的出现，它们也有了自己对于的线程安全类，比如**HashMap对应的线程安全类**是**ConcurrentHashMap**。
+
+#### 31.迭代器Iterator是什么？
+
+Iterator接口提供遍历任何Collection的接口。我们可以从任何一个Collection中使用iteration来获取迭代器实例。
+
+#### 32. Iterator怎么用？有什么特点？
+
+```java
+        Vector<Integer> vec = new Vector<>();
+        vec.add(1);
+        vec.add(2);
+        Iterator<Integer> ite = vec.iterator();
+        while (ite.hasNext()){
+            System.out.println(ite.next()); // 1,2
+        }
+```
+
+Iterator的特点是更加安全，因为它可以确保，在**当前遍历集合元素被修改**时，抛出**ConcurrentModificationException**异常。
+
+```java
+        Vector<Integer> vec = new Vector<>();
+        vec.add(1);
+        vec.add(2);
+        Iterator<Integer> ite = vec.iterator();
+				// listIterator.previous() 方法可以使其双向访问
+        ListIterator<Integer> ite2 = vec.listIterator();
+        while (ite.hasNext()){
+            vec.add(3);
+            System.out.println(ite.next());
+        }
+// Exception in thread "main" java.util.ConcurrentModificationException
+```
+
+#### 33.Iterator和ListIterator有什么区别？
+
+- **Iterator**可以遍历**Set和List**，而**ListIterator**只能遍历**List**。
+- Iterator只能**单向遍历**，而ListIterator能**双向遍历**。
+- ListIterator从Iterator**继承**，然后添加了一些额外的功能，比如添加一个元素、替换、获取前后元素索引。
+
+#### 34.怎么确保一个集合不能被修改？
+
+可以使用Collections.**unmodifiableCollection**(Collection c)方法来创建一个只读集合，这样改变集合的任何操作都会抛出Java.lang.UnsupportedOperationException异常。
+
+```java
+        Vector<Integer> vec = new Vector<>();
+        vec.add(1);
+        Collection<Integer> unchange = Collections.unmodifiableCollection(vec);
+        unchange.add(2);         // 报错 Exception in thread "main" java.lang.UnsupportedOperationException
+```
+
+### 多线程
+
+#### 35.并发和并行有什么区别
+
+- 并行：**多个处理器**或多核处理器同时处理多个任务。
+- 并发：多个任务在**同一个CPU核**上，按**时间片**轮流执行，从逻辑上来看那行任务时同时执行。
+
+#### 36.线程和进程的区别？
+
+一个程序下至少有一个进程，一个进程下至少有一个线程，一个进程下也可以有多个线程来增加程序的执行速度。
+
+#### 37.守护线程是什么？
+
+守护线程是运行在后台的一种特殊线程。它独立于控制终端并且**周期性地**执行某种任务或等待处理某些发生的时间。在Java中**垃圾回收线程**就是特殊的守护线程。
+
+#### 38.创建线程有哪几种方式？
+
+创建线程有三种方式：
+
+- 继承Thread重写run方法；
+- 实现Runnable接口；
+- 实现Callable接口。
+
+#### 39.说一下runnable和callable有什么区别？
+
+runnable没有返回值，callable可以拿到返回值，callable可以看作是runnable的补充。
+
+```java
+        CallableExample ex = new CallableExample();
+        RunnableExample ru = new RunnableExample();
+        ru.run(); // void
+        Object object = ex.call(); // 返回object
+```
+
+#### 40.线程的状态有哪些？
+
+- NEW  尚未启动
+- RUNNABLE  正在执行中
+- BLOCKED  阻塞的(被同步锁或者IO锁阻塞)
+- WAITING 永久等待状态
+- TIMED_WAITING 等待指定的时间重新被唤醒的状态
+- TERMINATED 执行完成
 

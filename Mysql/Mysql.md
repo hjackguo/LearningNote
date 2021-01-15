@@ -4,6 +4,10 @@
 
 
 
+
+
+
+
 ### 数据库的相关概念
 
 DB（Database）
@@ -742,9 +746,581 @@ cross join boys bo; # 结果 48行
 
 
 
+------
+
+
+
 ### 子查询
 
+出现在其它语句中的select语句，称为子查询或内查询。
+
+外部的查询语句，称为主查询或外查询。
+
+分类：
+
+按子查询出现的位置：
+
+​					select 后面：
+
+​							仅支持标量子查询
+
+​					from 后面：
+
+​							支持表子查询
+
+​					* where或having后面 ：
+
+​							*标量子查询（单行）
+
+​							*列子查询 （多行）
+
+​							行子查询
+
+​					exists后面（相关子查询）
+
+​							表子查询
+
+按结果集的行列不同：
+
+​					标量子查询（结果集有一行一列）
+
+​					列子查询（有一列多行）
+
+​					行子查询（一行多列）
+
+​					表子查询（结果集一般为多行多列）
+
+
+
+#### where或having后面
+
+1、标量子查询（单行子查询）
+
+2、列子查询
+
+3、行子查询（一行多列）
+
+
+
+特点：
+
+1.子查询在小括号内
+
+2.子查询一般方条件右边
+
+3.标量子查询，一般用单行操作
+
+< >= <= = < >
+
+列子查询一般搭配多行操作符
+
+in 、any/some、 all
+
+4.子查询的执行优先于主查询
+
+```mysql
+# 标量子查询
+# 案例：查询谁的工资比Abel高？
+# 1.查询Abel工资
+select salary
+from employees
+where last_name="Abel";
+# 2.查询员工信息，满足>1
+select * 
+from employees
+where salary > (
+    select salary 
+    from employees
+    where last_name="Abel"
+);
+
+# 案例： 返回job_id与141号员工相同，salary比143号员工多的员工姓名，job_id和工资
+#1. 查141员工job id
+select job_id
+from employees
+where employee_id=141
+# 2. 查143号员工salary
+select salary 
+from employees
+where employee_id = 143
+# 3.查询员工姓名，job_id和工资 要去job_id=1并且salary>2
+select last_name,job_id,salary
+from employees
+where job_id=(
+    select job_id
+    from employees
+    where employee_id=141
+) and salary>(
+    select salary 
+    from employees
+    where employee_id = 143
+)
+
+# 案例:返回公司工资最少的员工的last_name,job_id和salary
+#1. 查询工资最少的
+select min(salary)
+from employees
+#2.
+select last_name,job_id,salary
+from employees
+where salary=(
+    select min(salary)
+    from employees
+);
+
+# 案例：查询最低工资大于50号部门最低工资的部门id和其最低工资
+# 1.50号部门最低工资
+select min(salary)
+from employees
+where department_id = 50
+# 2. 查询每个部门最低工资
+select department_id, min(salary)
+from employees
+group by department_id
+having min(salary)>(
+    select min(salary)
+    from employees
+    where department_id = 50
+);
 ```
+
+```mysql
+# 列子查询（多行子查询）
+/**
+操作符
+in/not in
+any|some
+all
+**/
+
+# 案例：返回location_id是1400或1700的部门中所有员工姓名
+select last_name
+from employees
+where department_id in(
+    select department_id
+    from departments
+    where location_id in (1400,1700)
+);
+
+select last_name
+from employees
+where department_id = any(
+    select department_id
+    from departments
+    where location_id in (1400,1700)
+);
+
+# 案例：返回其它工种中比job_id为'IT_PROG'部门任一工资低的员工的工号、姓名、job_id以及salary
+select employee_id,last_name,job_id,salary
+from employees
+where salary<any(
+    select salary
+    from employees
+    where job_id='IT_PROG'
+) and job_id!='IT_PROG';
+
+# 案例:返回其它工种中比job_id为'IT_PROG'部门所有工资低的员工的工号、姓名、job_id以及salary
+select employee_id,last_name,job_id,salary
+from employees
+where salary<all(
+    select salary
+    from employees
+    where job_id='IT_PROG'
+) and job_id!='IT_PROG';
+```
+
+```mysql
+# 行子查询（1行多列、多行多列）
+
+# 案例： 查询员工编号最小，工资最高的员工信息
+# 1.查询最小的员工编号
+select min(employee_id)
+from employees
+# 2.查询工资最高
+select max(salary)
+from employees
+# 3.
+select *
+from employees
+where employee_id=(
+  select min(employee_id)
+	from employees
+) and salary = (
+  select max(salary)
+	from employees
+);
+
+select *
+from employees
+where (employee_id,salary)=(
+  select min(employee_id),max(salary)
+	from employees
+);
+```
+
+#### select 后面
+
+```mysql
+# 案例：查询每个部门员工个数
+select d.*,(
+  select count(*)
+  from employees e
+  where e.department_id = d.department_id
+)
+from departments d;
+
+# 案例：查询员工号=102的部门名
+select (
+  select department_name
+  from departments d
+  inner join employees e
+  on d.department_id = e.department_id
+  where e.employee_id=102
+);
+
+```
+
+#### from后面
+
+```mysql
+# from后面
+
+#案例：查询每个部门的平均工资的工资等级
+select avg(slary),department_id 
+from employees
+group by department_id
+
+select * from job_grade;
+
+# 2连接1的结果集和job_grade表，筛选条件
+select ag_dep.*,g.grade_level
+from (
+  select avg(slary),department_id 
+	from employees
+	group by department_id
+) ag_dep
+inner join job_grades g
+on ag_dep.ag between lowest_sal and highest_sal;
+
+```
+
+### 分页查询
+
+```mysql
+/**
+应用场景：当要现实的数据，一页显示不全，需要分页提交sql请求
+
+语法：
+		select 
+		from
+		join type
+		on
+		where
+		group by
+		having
+		order by
+		limit offset,size; # 放在最后，执行也是在最后
+		
+		offset 要显示条目的起始索引(从0开始)
+		size 要现实的条目个数
+		
+特点：
+   1. limit语句放在查询最后
+   2. 公式
+   要显示的页数page,页的条数size
+   
+   select 
+   from
+   limit (page-1)*size,size;
+**/
+# 案例：查询前五条员工信息
+select *
+from employees
+limit 0,5;
+
+select *
+from employees
+limit 5; # 0被省略
+
+# 案例：有奖金员工新奇，并且工资高的前10名
+select *
+from employees
+where commission_pct is not null
+order by salary desc
+limit 10;
+```
+
+### 联合查询
+
+```mysql
+/**
+union 联合；将多条查询语句合并成一个结果
+
+语法：
+查询语句1
+union
+查询语句2
+union
+...
+
+应用场景：
+要查询的结果来自于多个表，多个表没有直接的连接关系，但查询的信息一致时。
+
+特点：
+1. 要求多条查询语句查询列数一致
+2. 要求多个查询语句的查询的每一列的类型和顺序最好一致
+3. union默认去重，union all 允许重复。
+**/
+
+# 案例：查询部门编号>90或者邮箱包含a的员工信息
+select *
+from employees
+where email like '%a%'
+or department_id>90;
+
+select *
+from employees
+where email like '%a%'
+union 
+select *
+from employees
+and department_id>90;
+```
+
+## DDL语言
+
+### 常见约束
+
+```mysql
+/*
+分类： 六大约束
+
+	NOT NULL: 非空，用于保证字段不为空
+	DEFAULT：默认值
+	PRIMARY KEY：主键，用于保证字段唯一性，并且非空
+	UNIQUE： 唯一值，可以为空
+	CHECK：检查约束【mysql不支持】
+	FOREIGN KEY: 外键，用于限制两个表的关系，用于保证该字段必须来自于主表的关联列的值。(在从表添加外键约束，用于引用主表中某列的值)
+	
+添加约束时机：
+	1.创建表时
+	2.修改表时
+	
+约束的添加分类：
+	列级约束
+	表级约束
+*/
+create table 表名{
+		字段名 字段类型 列级约束，
+    字段名 字段类型 列级约束，
+		表级约束
+}
+```
+
+```mysql
+# 创建列级约束
+
+create table stuinfo(
+		id int primary key,   #主键
+  	stuName varchar(20) not null,  # 非空
+		gender char(1) check(gender='男' or gender='女'), # 检查
+    sear int unique, # 唯一
+    age int default 18,  #默认
+    marjorid int foreign key references major(id) # 外键（不支持列级，但不报错）
+);
+
+create table major(
+		id int primary key,
+    majorName varchar(20)
+);
+
+# 查看stuinfo表中所有索引，包括主键、外键、唯一
+show index from stuinfo;
+
+
+# 表级约束
+/*
+constraint 约束名(可忽略) 约束类型(字段名)
+*/
+create table stuinfo(
+	id int,  
+  	stuName varchar(20), 
+	gender char(1),
+    seat int ,
+    age int,
+    majorid int,
+    
+    constraint pk primary key (id),
+    constraint uq unique(seat),
+    constraint ck check(gender='男' or gender='女'),
+    constraint fk foreign key(majorid) references major(id)
+);
+
+# 通用写法
+create if exists table stuinfo(
+		id int primary key,
+  	stuName varchar(20) not null, 
+		gender char(1),
+    sear int unique, 
+    age int default 18, 
+    marjorid int,
+  	constraint fk_stuinfo_major foreign key(majorid) references major(id)
+);
+```
+
+```mysql
+# 外键
+/*
+1. 要求在从表设置外键关系
+2. 从表的外键列的类型和主表关联列类型要一致或兼容，名称无要求
+3.主表的关联列必须是一个key（一般是主键或唯一）
+4.插入数据，先插入主表，再插入从表
+删除数据时，先删除从表，再删除主表
+*/
+```
+
+```mysql
+# 标示列
+
+/*
+自增长列
+
+特点：
+1. 必须和主键搭配吗？ 不一定，但要求一定是key.
+2.一个表可以有几个标识列 ？ 至多一个
+3.只能数值型
+4.set auto_increment_increment=3，设置步长
+手动插入值设置起始值
+*/
+
+# 创建表时设置标识列
+create table tab_identity(
+	id int primary key auto_increment,
+  name varchar(20)
+);
+```
+
+## TCL语言
+
+```mysql
+/**
+Transaction Control Language 事务控制语言
+
+事务：
+一个或者一组，要么全执行，要么全不执行。
+
+innodb支持事务，myisam、memory不支持。
+
+事务的ACID属性
+1.原子性(Atomicity)
+事务是一个不可分割的工作单位，要么都发生，要么都不发生。
+2.一致性（Consistency）
+事务必须从一个一致状态变换到另一个一致状态。 没有中间过程！
+3.隔离型（Isolation）
+一个事务的执行，不受别的事务的干扰。
+4.持久性（Durability）
+事务一旦提交，他对数据库的改变是永久性的。
+*/
+
+show engines;
+```
+
+### 事务的创建
+
+```mysql
+/*
+隐式事务：事务没有明显的开启和结束的标记
+比如 insert,update,delete
+*/
+
+/*
+显示事务：事务具有明显的开启和结束标记
+前提：必须先设置自动提交功能为禁用
+
+步骤1:开启事务
+set autocommit=0;
+start transaction; (可选)
+步骤2:编写事务中sql
+语句1;
+语句2;
+...
+步骤3:结束事务
+commit; 提交事务
+rollback; 回滚事务
+
+savepoint 节点名；设置保存点
+*/
+set autocommit = 0;
+
+# 演示事务
+
+# 开启事务
+set autocommit=0;
+start transaction;
+# 编写事务
+update account set balance = balance - 500 where username='张无忌';
+update account set balance = balance + 500 where username='赵敏';
+# 结束事务
+commit;
+rollback;
+
+
+```
+
+savepoint 使用
+
+```mysql
+set autocommit = 0;
+delete from account where id=25;
+savepoint a;
+delete from account where id=28;
+rollback to a;
+```
+
+
+
+### 数据库隔离级别
+
+```mysql
+/*
+多个事务访问数据库中相同数据带来问题：
+1.脏读：T1读了已经被T2修改但没提交字段，T2回滚，T1读取的数据就是临时且无效的
+2.不可重复读：T1读取了一个字段，T2更新了该字段。之后T1再次读取同一个字段，值就不同了。
+3.幻读：T1从一个表读了一个字段，T2在该表插入行的一行后，如果T1再次读这个表，会多出几行。
+
+数据库4种事务隔离级别
+READ UNCOMMITTED
+允许事务读取未被其它事务提交的变更。
+脏读、不可重复读和幻读都会出现
+
+READ COMMITED
+只允许事务读取已经被其它事务提交的变更。
+可以避免脏读
+但不可重复读和幻读问题仍然出现
+
+REPEATABLE READ
+确保事务可以多次从一个字段种读取相同的值。在这个事务持续期间，禁止其他事务对这个字段进行更新。
+可以避免脏读和不可重复读
+但幻读的问题仍然存在
+
+SERIALIZABLE （串行化）
+确保事务可以从一个表读相同行，在这个事务执行期间，禁止其它事务对表执行插入，更新和删除。
+所有并发问题都可以避免，性能十分低下
+
+									脏读  不可重复读   幻读
+read uncommited		 Y			Y					Y
+read committed			N			Y					Y	
+repeatable read			N			N					Y	
+serializable				N			N					N
+
+mysql默认repeatable read
+
+查看隔离级别
+select @@transaction_isolation;
+
+设置隔离级别
+set session transaction isolation level repeatable read;
+*/
 
 ```
 

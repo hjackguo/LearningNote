@@ -190,7 +190,7 @@ show index from table_name;
 - 哪些索引可以使用
 - 哪些索引被实际使用
 - 表之间的引用
-- 每张表有多少行被优化器查询
+- 每张表有多少行被优化器查询 (rows)
 
 
 
@@ -292,17 +292,251 @@ show index from table_name;
 
   查询中若出现**覆盖索引**，则该索引只出现在key列表中。
 
-  覆盖索引： select的字段和建立复合索引的字段的个数和顺序一致。
+  覆盖索引： select的字段和建立复合索引的字段的个数和顺序一致。(从索引就找到返回值)
 
 - key_len
 
-  
+  索引字段的最大可能长度，并非实际长度。不损失精确度的情况下，长度越短越好。
 
 - ref
 
+  显示索引的那一列被使用了。
+
 - rows
 
+  根据表统计信息及索引选用情况，大致估算出找到所需记录所需要读取的行数。
+
 - Extra
+
+  包含不适合在其他列中显示但十分重要的额外信息。
+
+  - *Using filesort 
+
+    说明mysql会对数据使用一个外部的索引排序。而不是按照表内的索引顺序进行读取。
+
+    MySQL中无法利用索引完成的排序称为“**文件排序**”。
+
+  - *Using temporary
+
+    使用了临时表保存中间结构，MySQL在对查询结果排序时使用临时表。常见于order by和分组查询group by。
+
+  - *Using index
+
+    表示相应的select操作使用了**覆盖索引(Covering Index)**，避免访问数据行，效率不错。需要读索引文件，不需要再根据索引读数据文件。
+
+    如果使用覆盖索引，一定要注意select列表只取需要的列，不要select *
+
+  - Using where
+
+    用了where过滤
+
+  - Using join buffer
+
+    使用了连接缓存
+
+  - impossible where
+
+    where的值永远等于false
+
+------
+
+**案例优化**
+
+```mysql
+# 建立联合索引
+create index idx_article_ccv on article(catogory_id,comments,views)
+# 本处type是range，但会出现 using filesort（中间的索引是范围的情况下，后面排序失效）
+explain select id,author_id from 'article' where catogory_id=1 and comments>1 order by views desc limit 1;
+# 本处不会出现 using filesort
+explain select id,author_id from 'article' where catogory_id=1 and comments=1 order by views desc limit 1;
+
+# 结论
+# type 变成range，可以忍受，但extra里面的Using filesort无法接受
+# 我们建立了索引 为什么没用？
+# BTree 索引工作原理
+# 先排序 catogory_id，
+# 如果catogory_id相同排序comments,如果comment相同再排序views
+# 当comments字段在联合索引里处于中间位置时
+# 因为comments>1条件是一个范围值(range)
+# MySQL无法利用索引对后面views部分进行检索，即range类型查询字段后面的索引无效。
+
+# 解决方法
+# 丢弃不合适索引
+drop index idx_article_ccv on article;
+# 建立新索引
+create index idx_article_ccv on article(catogory_id,views)
+# 此时， type变成了ref, 同时extra里面的using filesort消失了
+explain select id,author_id from 'article' where catogory_id=1 and comments>1 order by views desc limit 1;
+```
+
+```mysql
+# 双表
+
+# 左右连接（相反加）
+
+# left join条件用于确定如何从右表搜索行，左边一定都有
+# 所以右边是关键点，一定需要建立索引。
+
+```
+
+```mysql
+# 三表
+# 模仿双表，执行加2次index
+```
+
+------
+
+案例：索引失效
+
+1. 全值匹配我最爱
+
+2. 最佳左前缀法则
+
+   如何使用复合索引，要遵守最左前法则。查询从索引的**最左前列**开始并且**不跳过**索引中的列。如果**中间缺少**，能使用到**前面部分索引**。
+
+   (**火车跑得快 全靠车头带**)
+   (**中间兄弟不能断**)
+
+3. 不在索引列上左任何操作（计算、函数、类型转换（手动、自动）），会导致索引失效而转向全表扫描
+
+   **索引列上无计算**
+
+4. 存储引擎不能使用索引中范围条件右边的列
+
+   **范围之后全失效**
+
+5. 尽量使用**覆盖索引**（只访问索引的查询（索引列和查询列一致）），减少select *。
+
+6. is null, is not null也无法使用索引。
+
+7. like以通配符开头('%abc')mysql索引失效会变成全表扫描的操作。
+
+   **like百分加右边**
+
+   **问题：解决 like '%字符串%' 时索引不被使用的方法？**
+
+   用**覆盖索引**解决，可以避免全表扫描。
+
+8. 字符串不加单引号索引失效。
+
+   可能会被**强制类型转换，索引失效**。
+
+   **字符串里有引用**
+
+9. 少用or,用它来连接时索引失效。
+
+------
+
+#### 索引面试题
+
+```mysql
+create index idx_test03_c1234 on test03(c1,c2,c3,c4);
+# 本处顺序1 2 4 3,但优化器会优化成1234，优化器自动排序
+explain select * from test03 where c1='a1' and c2='a2' and c4='a4' and c3='a3';
+
+# 用到3个， 范围之后c4失效
+explain select * from test03 where c1='a1' and c2='a2' and c3>'a4' and c4='a3';
+
+# 用到2个！ c1,c2   (索引有两个功能，查找和排序   本处expain只显示用于查找的c1,c2.         c3用于排序)
+explain select * from test03 where c1='a1' and c2='a2' and  c4='a3' order by c3;
+
+# 用到2个！ c1,c2   (索引有两个功能，查找和排序   本处expain只显示用于查找的c1,c2.         c3用于排序)
+explain select * from test03 where c1='a1' and c2='a2' order by c3;
+
+# using file sort  .  c4的索引失效
+explain select * from test03 where c1='a1' and c2='a2'  order by c4;
+
+# 本处不会出现using file sort,  c1用于查询 c2 c3用于排序
+explain select * from test03 where c1='a1' and c5='1'  order by c2,c3;
+
+# using file sort . c3 c2 索引顺序  导致索引失效
+explain select * from test03 where c1='a1' and c5='1'  order by c3,c2;
+
+# 正常运行
+explain select * from test03 where c1='a1' and c2='a2'  order by c2,c3;
+
+# 正常运行，本出c2前面已经出现，c2变成常量！  后面c3可以走索引
+explain select * from test03 where c1='a1' and c2='a2'  order by c3,c2;
+
+# using temporary, using filesort
+explain select c1 from test03 where c1='a1' and c5='1'  group  by c3,c2;
+
+# 正常
+explain select c1 from test03 where c1='a1' and c5='1'  group  by c2,c3;
+
+# 只用到c1
+explain select c1 from test03 where c1='a1' and c2='%kk%' and c3='a3';
+
+# 用到c1,c2,c3
+explain select c1 from test03 where c1='a1' and c2='k%kk%' and c3='a3';
+```
+
+group by基本上需要进行排序，会有临时表产生
+
+------
+
+#### 查询优化
+
+- 对于单键索引，尽量选择针对当前query过滤性更好的索引
+- 在选择复合索引，当前query中过滤下最好的字段在索引字段顺序中，位置越靠前越好。
+- 在选择复合索引的时候，尽量选择可以包含当前query中where句子中更多字段的索引。
+- 尽可能通过分析统计信息和调整query的写法来达到合适索引的目的。
+
+------
+
+
+
+### 查询截取分析
+
+总结
+
+1. 慢查询日志开启并捕获
+2. explain+慢SQL分析
+3. show profile查询SQL在Mysql服务器里面执行细节和生命周期情况
+4. SQL数据库服务器的参数调优
+
+------
+
+#### 查询优化
+
+
+
+**永远小表驱动大表**
+
+
+
+for(int i=5;....){
+
+​		for(int j=1000){
+
+​		}
+
+}
+
+```mysql
+select * from A where id in (select id from B)
+#等价于
+for select id from B:
+		for select * from A where A.id=B.id
+# 当B表数据集必须小于A表时，用in优于exists
+
+
+select * from A where exists(select 1 from B where B.id=A.id)
+# 等价于
+for select * from A
+		for select * from B where B.id = A.id
+# 当A表数据集小于B表时，exists优于in
+```
+
+
+
+
+
+**Order by 关键字优化**
+
+
+
+
 
 
 
@@ -318,7 +552,17 @@ show index from table_name;
 
 
 
-### 查询截取分析
+#### 慢查询日志
+
+#### 批量数据脚本
+
+#### Show Profile
+
+#### 全局查询日志
+
+
+
+
 
 
 

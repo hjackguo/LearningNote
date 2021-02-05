@@ -1,3 +1,5 @@
+
+
 ### Mysql 架构介绍
 
 #### 层次结构
@@ -534,39 +536,178 @@ for select * from A
 
 **Order by 关键字优化**
 
+```mysql
+# 不会出现filesort
+explain select * from tblA where age > 20 order by age,birth;
+
+# 出现file sort
+explain select * from tblA where age > 20 order by birth;
+
+# 出现filesort
+explain select * from tblA where age > 20 order by birth,age;
+
+# 出现filesort
+explain select * from tblA order by age ASC, birth desc;
+
+```
+
+
+
+Filesort排序有两种：双路排序和单路排序
+
+**单路排序**
+
+从磁盘读取查询需要的所有列，按照order by列在buffer对它们进行排序，然后扫描排序后的列表进行输出，它的效率比双路排序更快一些，避免了二次读取数据。并且把随机IO变成了顺序IO，但是它会使用更多的空间，因为它把每一行都保存在内存中了。
+
+
+
+- 单路算法是后面出现的，总体优于双路排序。
+
+- 但是如果读取数据量过大，单路算法需要多次IO读取，效果比双路算法差。
+
+  在sort_buffer中，单路比双路要多占用很多空间，因为单路是把所有字段取出，所以有可能取出的数据总大小超出了sort_buffer容量，导致每次只能读取sort_buffer容量大小的数据进行排序(创建tmp文件，多路合并)，排完再取sort_buffer容量大小，再排... 从而产生多次IO。
+
+  本来单路算法是想省一次IO操作，可能反而导致了大量I/O操作。
+
+
+
+**提高order by的速度**
+
+- 用order by的时候不要用select  *
+
+  当Query的字段大小总和小于max_length_for_sort_data并且排序字段不是TEXT|BOLB类型时，会用改进后的算法 — 单路排序，否则用老算法—多路排序。
+
+  两种算法数据都可能超出sort_buffer容量，超出之后，会创建tmp文件进行合并排序，导致多次I/O，但是用单路排序算法的风险大一点，所以提高max_buffer_size.
+
+- 增大sort_buffer_size参数的设置
+- 增大max_length_for_sort_data参数的设置
 
 
 
 
 
+**为排序使用索引**
+
+- Mysql两种排序方式：文件排序或扫描有序索引排序
+- Mysql能为排序于查询使用相同的索引
+
+
+
+![1881612464003_.pic_hd.jpg](http://ww1.sinaimg.cn/mw690/008aPpVGgy1gnc3036bxrj32fo1ss4e9.jpg)
 
 
 
 ------
 
-
-
-
-
-
-
-
-
 #### 慢查询日志
+
+设置long_query_time， 超过这个时间的sql会被记录到慢查询日志。
+
+默认情况下，mysql没有开启慢查询日志，需要手动设置。
+
+如果不是调优的话，不建议开启，会或多或少带来性能影响。
+
+```mysql
+# 查看
+show variables like '%slow_query_log%';
+
++---------------------+--------------------------------------------+
+| Variable_name       | Value                                      |
++---------------------+--------------------------------------------+
+| slow_query_log      | OFF                                        |
+| slow_query_log_file | /usr/local/mysql/data/MacBook-Pro-slow.log |
++---------------------+--------------------------------------------+
+2 rows in set (0.11 sec)
+
+# 开启(只对当前数据库生效，mysql重启后失效)
+set global slow_query_log=1;
+
+# 查看阈值  >10才记录
+show variables like 'long_query_time%';
++-----------------+-----------+
+| Variable_name   | Value     |
++-----------------+-----------+
+| long_query_time | 10.000000 |
++-----------------+-----------+
+
+#修改阈值 (需要重新连接或新建一个会话才能看到修改值)
+set global long_query_time=3;
+
+# 慢日志记录条数
+show global status like '%Slow_queries%';
+
+# 慢日志分析帮助工具
+mysqldumpslow --help;
+```
+
+------
+
+
 
 #### 批量数据脚本
 
+
+
+具体实现查一下
+
+------
+
+
+
 #### Show Profile
+
+mysql提供可以用来分析当前会话中语句执行的资源消耗情况。可以用于SQL调优的测量。
+
+默认情况下关闭，并保存最近15次的运行结果。
+
+
+
+1. 是否支持
+
+2. 是否已开启 
+
+    show variables like 'profiling'; 
+
+3. 运行SQL
+
+4. 查看结果 show profiles;
+
+5. 诊断， show profile cpu,block io for query 上一步问题SQL数字号码
+
+   show profile 出来的生命周期各项执行时间中，出现如下4个要着重看
+
+   - coverting HEAP to MyISAM 查询结果太大，内存都不够了往磁盘上搬
+   - Creating tmp table 创建临时表 （拷贝数据到临时表，用完再删除）
+   - Copying to tmp table on disk 把内存中的临时表复制到磁盘，危险！！！
+   - locked
+
+<img src="http://ww1.sinaimg.cn/mw690/008aPpVGgy1gncc70rj36j30kc0t6785.jpg" alt="1891612483719_.pic_hd.jpg" style="zoom:50%;" />
+
+
+
+------
 
 #### 全局查询日志
 
+只允许**测试环境**用，不允许生产环境用。
 
+```mysql
+set global general_log = 1;
 
+set global log_output='TABLE';
 
+select * from mysql.general_log;
+
+# 记录时间  用户  进行了什么操作
+```
+
+------
 
 
 
 ### Mysql锁机制
+
+
 
 
 

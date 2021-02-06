@@ -709,7 +709,301 @@ select * from mysql.general_log;
 
 
 
+**锁的分类**
 
+从对数据操作的类型分：
+
+- 读锁 (**共享锁**)：针对同一份数据，多个读操作可以同时进行而不互相影响。
+- 写锁 (**排它锁**): 当前写操作没有完成前，它会阻断其他写锁和读锁。
+
+**简而言之，读锁会阻塞写，但是不会阻塞读。而写锁会把读和写都阻塞。**
+
+
+
+从操作粒度分：
+
+- 表锁 (偏读)
+
+  偏向MyISAM存储引擎，开销小，加锁快；无死锁；锁定粒度大，发生锁冲突的概率最高，并发度最低。
+
+- 行锁 (偏写)
+
+  
+
+- 页锁
+
+```mysql
+# 加锁
+lock table mylock read;
+lock table mylock write;
+
+# 释放锁
+unlock tables;
+
+# 查看各表状态
+show open tables;
+```
+
+```mysql
+# 读锁案例 （读阻塞写例子）
+
+# session 1 加读锁
+lock table mylock read;
+
+# session 1和session 2 都能访问本表
+select * from mylock;
++----+------+
+| id | name |
++----+------+
+|  1 | a    |
+|  2 | b    |
+|  3 | c    |
+|  4 | d    |
+|  5 | e    |
++----+------+
+
+# session 1 读别的表 失败
+select * from staffs;
+# ERROR 1100 (HY000): Table 'staffs' was not locked with LOCK TABLES
+
+# session 2 读别的表 成功
+mysql> select * from staffs;
++----+------+-----+---------+---------------------+
+| id | NAME | age | pos     | add_time            |
++----+------+-----+---------+---------------------+
+|  1 | z3   |  22 | manager | 2021-02-03 19:12:58 |
++----+------+-----+---------+---------------------+
+
+# session 1   update不能执行
+update mylock set name='a2' where id=1;
+# ERROR 1099 (HY000): Table 'mylock' was locked with a READ lock and can't be updated
+
+# session 2 update 
+ update mylock set name='a2' where id=1;  
+ # 阻塞！ 等待session 1 解锁才自动执行
+unlock tables;
+#Query OK, 0 rows affected (0.00 sec)
+# 此时session 2自动显示
+#Query OK, 1 row affected (2 min 22.38 sec)
+#Rows matched: 1  Changed: 1  Warnings: 0
+
+
+```
+
+```mysql
+# 写锁案例
+
+# session 1 加写锁  读 改都成功
+lock table mylock write;
+select * from mylock;
+update mylock set name='a3' where id=1;
+# session 1读其它表 失败
+select * from staffs;
+# ERROR 1100 (HY000): Table 'staffs' was not locked with LOCK TABLES
+
+# session 2读其它表 成功
+select * from staffs;
+
+# session 2 读  阻塞
+ select * from mylock;
+ # session 2 写  阻塞
+ update mylock set name='a2' where id=1;
+```
+
+
+
+
+
+```mysql
+# 表锁
+show status like 'table%';
++----------------------------+-------+
+| Variable_name              | Value |
++----------------------------+-------+
+| Table_locks_immediate      | 339   |
+| Table_locks_waited         | 0     |
+| Table_open_cache_hits      | 72    |
+| Table_open_cache_misses    | 10    |
+| Table_open_cache_overflows | 0     |
++----------------------------+-------+
+
+# Table_locks_waited ： 出现表级锁争用而发生等待的次数，此值越高说明存在较严重的表级锁争用情况。
+
+# MyISAM的读写锁调度是写优先，这也是myISAM不适合做写为主表的引擎，因为写锁后，其它线程不能做任何操作，大量的更新会使查询很难得到锁，从而造成永久阻塞。
+```
+
+
+
+**行锁**
+
+偏向InnoDB，开销大，加锁慢；会出现死锁；锁定粒度最小，发生锁冲突的概率最低，并发度也最高。
+
+InnoDB和MyISAM最大不同有两点：一是**支持事务**(TRANSACTION)；二是采用了**行级锁**。
+
+
+
+InnoDB支持事务带来的问题
+
+| 隔离级别                       | 读数据一致性                             | 脏读 | 不可重复读 | 幻读 |
+| ------------------------------ | ---------------------------------------- | ---- | ---------- | ---- |
+| 未提交读 (Read uncommitted)    | 最低级别，只能保证不读取物理上损坏的数据 | 是   | 是         | 是   |
+| 已提交读(Read committed)       | 语句级                                   | 否   | 是         | 是   |
+| 可重复读(Repeatable read) 默认 | 事务级                                   | 否   | 否         | 是   |
+| 可序列化(Serializable)         | 最高级别，事务级                         | 否   | 否         | 否   |
+
+
+
+```mysql
+# 行锁演示
+
+# session 1
+set autocommit=0;
+update test_innodb_lock set b='4001' where a =4;
+# Query OK, 1 row affected (0.00 sec)
+
+# session 2
+set autocommit=0;
+update test_innodb_lock set b='4002' where a =4;
+# 阻塞 session只能  修改不同行，同一行会被阻塞
+
+# session 1
+commit;
+# session 2
+#Query OK, 1 row affected (5.18 sec)  等待了5秒！
+# Rows matched: 1  Changed: 1  Warnings: 0
+```
+
+
+
+**无索引行锁升级为表锁**
+
+```mysql
+# session 1
+set autocommit=0;
+# 注意 b是varchar 写成8000,强制类型转换， 索引失效，行锁变表锁
+update test_innodb_lock set a=41 where b = 8000;
+# Query OK, 0 rows affected (0.00 sec)
+
+# session 2
+set autocommit=0;
+update test_innodb_lock set b='5002' where a =5;
+# 阻塞， 此时是表锁
+
+# session 1
+commit;
+# session 2
+# Query OK, 1 row affected (35.70 sec)  等待35秒
+```
+
+
+
+**间隙锁的危害**
+
+当我们用范围条件而不是相等条件检索数据，InnoDB会给符合条件的不存在的间隙加锁。
+
+危害： 锁定一个范围索引键值后，不存在的键值也会被锁定，造成无法插入锁定范围内的任何数据。某些场景下影响系统性能。
+
+```mysql
+mysql> select * from test_innodb_lock;
++------+------+
+| a    | b    |
++------+------+
+|    1 | b2   |
+|    3 | 4002 |
+|    4 | 4001 |
+|    5 | 5002 |
++------+------+
+
+# session 1
+set autocommit=0;
+update test_innodb_lock set b=4010 where a >1 and a<4;
+
+# session 2
+set autocommit = 0;
+insert into test_innodb_lock values(2,'2000'); 
+# 阻塞，间隙锁
+
+# session 1
+commit;
+# session 2 
+# Rows matched: 1  Changed: 1  Warnings: 0
+```
+
+
+
+**如何锁定一行**
+
+```mysql
+# session 1
+begin;
+# select *** for update 指定某一行后，其它操作会被阻塞，直到锁定行的会话提交 commit.
+select * from test_innodb_lock where a=9 for update;
+
+# session 2
+ update test_innodb_lock set b='9003' where a =9; 
+ # 被阻塞
+ 
+# session 1
+commit;
+# session 2
+# Query OK, 1 row affected (39.52 sec)
+```
+
+
+
+**总结**
+
+**Innodb**存储引擎优于实现了**行级**锁定，虽然在锁定机制的实现方面所带来的性能损耗可能比表级锁定更高一些，但是整体**并发处理能力**方面要远远优于**MyISAM的表级**锁定的。当系统并发量较高的时候，InnoDB整体性能和MyISAM相比就会有比较明显的优势了。
+
+
+
+```mysql
+# 查看行锁状态
+show status like 'innodb_row_lock%';
++-------------------------------+--------+
+| Variable_name                 | Value  |
++-------------------------------+--------+
+| Innodb_row_lock_current_waits | 0      | #当前等待
+| Innodb_row_lock_time          | 156832 | #等待总时长
+| Innodb_row_lock_time_avg      | 19604  | #等待平均时长
+| Innodb_row_lock_time_max      | 51133  |
+| Innodb_row_lock_waits         | 8      | #等待总次数
++-------------------------------+--------+
+```
+
+
+
+**优化建议**
+
+- 尽可能数据检索用索引来完成，避免无索引行锁升级为表锁。
+
+- 合理设计索引，尽量缩小锁的范围。
+
+- 避免间隙锁
+
+- 尽量控制事务大小，减少锁定资源量和时间长度
+
+- 尽可能低级别事务隔离
+
+  
 
 ### 主从复制
+
+![WeChat5c0efd7012756a8e42403dc4d247fd8b.png](http://ww1.sinaimg.cn/mw690/008aPpVGgy1gnej0ax8zkj317s0l4b29.jpg)
+
+MySQL复制过程分成三步：
+
+1. master将改变记录到二进制日志(binary log)。这些记录过程叫做二进制日志事件，binary log events;
+2. salve将master的binary log events拷贝到它的中继日志(relay log);
+3. slave重做中继日志中的事件，将改变应用到自己的数据库中。MySQL复制是异步的且串行化的。
+
+
+
+**复制的基本原则**
+
+- 每个slave只有一个master
+- 每个slave只能有一个唯一的服务器ID
+- 每个master可以有多个slave
+
+
 

@@ -3148,6 +3148,8 @@ FCB实现了文件名和文件之间的映射，使用户程序可以实现"按�
 
 
 
+------
+
 ### 文件分配方式
 
 
@@ -3526,6 +3528,8 @@ FAT各个表项物理上连续存储，因此“物理块号”字段可以是�
 
 分组： 系统管理员、文件主、文件主的伙伴、其他用户
 
+------
+
 
 
 ### 文件系统的层次结构
@@ -3591,6 +3595,8 @@ FAT各个表项物理上连续存储，因此“物理块号”字段可以是�
 
 - 固定盘磁盘
 - 可换盘磁盘
+
+------
 
 
 
@@ -3693,6 +3699,8 @@ LOOK算法**如果在磁头移动方向上已经没有别的请求，就可以�
 
 优化C- SCAN算法。 C-LOOK算法规定如果磁头移动方向已经没有磁道访问请求了，就可以让磁头返回，并且磁头只需返回到有磁道访问请求的位置即可。
 
+------
+
 
 
 ### 减少磁盘延迟时间的方法
@@ -3730,6 +3738,10 @@ LOOK算法**如果在磁头移动方向上已经没有别的请求，就可以�
 错位命名
 
 ![WeChat7e6da8a77f732613c417671be07d8609.png](http://ww1.sinaimg.cn/large/008aPpVGgy1gnp48k03xij31560mo4qq.jpg)
+
+
+
+------
 
 
 
@@ -3790,3 +3802,456 @@ ROM一般是出厂就集成在主板上。
 <img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnp5c27s8bj30j20ig1kx.jpg" alt="WeChatcabe43eb4a09d6f7f3b4b0283f850dbc.png" style="zoom:33%;" />
 
 会保留一些“备用扇区”，用于替换坏块，这种方案称为**扇区备用**。且这种处理方式中，**坏块对操作系统透明**。
+
+------
+
+
+
+# 第五章
+
+## I-O
+
+### 设备的概念和分类
+
+"I/O"就是输入/输出设备
+
+
+
+UNIX系统将外部设备抽象为一种特殊的文件，用户可以使用与文件操作相同的方式对外部设备进行操作。
+
+write操作 (输出)
+
+read操作 (输入)
+
+
+
+按信息交换单位分类的话
+
+- 块设备
+
+  数据传输基本单位是块。传输速率高，可寻址，即对它任意随机地读/写任一块。(磁盘)
+
+- 字符设备
+
+  数据传输的基本单位是字符。不可寻址，输入/输出时常采用中断驱动的方式(鼠标，键盘)
+
+------
+
+### I/O控制器
+
+I/O控制器用于实现CPU对设备的控制
+
+
+
+I/O**控制器的功能**
+
+- 接受和识别CPU发出的命令
+
+  I/O控制器中有相应的**控制寄存器**来存放命令和参数
+
+- 向CPU报告设备的状态
+
+  I/O控制器中会有相应的**状态寄存器**，记录I/O设备的当前状态。
+
+- 数据交换
+
+  存在**数据寄存器**。输出时，用来暂存CPU发来的数据。输入时，用于暂存设备发来的数据。
+
+- 地址识别
+
+  需要给各个寄存器设置一个特定的"地址"。
+
+
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnpzttscywj31k40umnpe.jpg" alt="WeChat1a8ed64fd9ed777ba92d4724a27261e2.png" style="zoom:33%;" />
+
+
+
+1. 一个I/O控制器可能对应多个设备
+2. 数据寄存器、控制寄存器、状态寄存器可能有多个,且这些寄存器都要有相应地址，才方便CPU操作。有的计算机会让这些寄存器占用内存地址的一部分，称为**内存映像I/O**；另一些计算机采用I/O专用地址，即**寄存器独立编址**。
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnpzzczqn5j31hy0so7wi.jpg" alt="WeChat9a14f4cf3dfe7a0e4e378ee74060be74.png" style="zoom:33%;" />
+
+------
+
+
+
+### I/O控制方式
+
+
+
+#### 程序直接控制方式
+
+Key word:**轮询**
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq05ulehuj34842c4npp.jpg" alt="WeChatea2af118886118e38454bd182adc8a35.png" style="zoom:33%;" />
+
+
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq0b6za01j31h40umkjm.jpg" alt="WeChatf6182c7a971f41924e7492e655cd02b9.png" style="zoom:33%;" />
+
+忙等，CPU利用率低
+
+
+
+#### 中断驱动方式
+
+key word: **中断**
+
+引入中断机制，将等待的进程进行阻塞。
+
+![WeChatd4a39e05c32ab3d272d660991fcb3326.png](http://ww1.sinaimg.cn/large/008aPpVGgy1gnq0g00c3uj31i80u4x6p.jpg)
+
+
+
+
+
+#### DMA方式
+
+DMA(Direct Memory Access, 直接存储器存取)
+
+主要用于块设备的I/O控制。
+
+- 数据的传送单位是“块”
+- 数据直接从设备进入内存，或者内存直接到设备
+- 仅在传送一个或多个数据块(多个块在磁盘和内存中都需要连续存放)的开始和结束，才需要CPU干预
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq0n72x2lj31i00tob29.jpg" alt="WeChat6ed57074fc0dd98cd1dcc905d260fdf0.png" style="zoom:33%;" />
+
+优点：块位单位，CPU介入频率降低，数据不需要经过CPU。
+
+缺点：CPU每发出一条I/O指令，只能读/写一个或多个连续数据块
+
+
+
+#### 管道控制方式
+
+通道：一种**硬件**，"低配CPU"。通道可以识别并执行一系列**通道指令**。
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq0tdygy0j31iu0ognpd.jpg" alt="WeChatb48e674564ae8194bc2c88a25e736055.png" style="zoom:33%;" />
+
+CPU干预频率极低。通过会根据CPU指示执行相应通道程序。只有完成一组数据块读/写才需要发出中断信号，请求CPU干预。
+
+
+
+数据传送单位：**一组数据块**
+
+
+
+数据在I/O设备与内存间传输，不需要经过CPU
+
+
+
+缺点：实现复杂，需要专门通道硬件支持。
+
+优点: CPU、通道、I/O设备可以并行工作
+
+
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq0xycgkyj31eu0oqe82.jpg" alt="WeChat4f2eaadb3b6fa982cc2b90bd8ec5e27a.png" style="zoom:33%;" />
+
+------
+
+### I/O软件层次结构
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq358v5x0j31h40lsnpd.jpg" alt="WeChatbb42697dbe025e09c991e8cd5240268d.png" style="zoom:33%;" />
+
+#### 用户层软件
+
+用户层软件**实现了与用户交互的接口**。
+
+用户层软件将用户请求翻译成格式化的I/O请求，并通过“系统调用”请求操作系统内核的服务。
+
+如 printf("hello world")被翻译成write请求。
+
+
+
+#### 设备独立性软件
+
+又称设备无关性软件。与设备硬件特性无关的功能都在这
+
+
+
+主要实现：
+
+1. 向上层提供统一的调用接口(如write、read 系统调用)
+
+2. 设备的保护
+
+   设备被看成特殊的文件，各个用户访问权限不一样
+
+3. 差错处理
+
+   需要对一些设备的错误进行处理
+
+4. 设备分配与回收
+
+5. 数据缓冲区管理
+
+   可以通过缓冲技术屏蔽设备之间数据交换单位大小和传输速度的差异
+
+6. 建立逻辑设备名到物理设备名的映射关系
+
+   如(打印机1、打印机2)
+
+   设备独立性软件需要通过"**逻辑设备表(LUT, Logical Unit Table)**"来确定逻辑设备对应的**物理设备**，并找到该设备对应的**设备驱动程序**。(设备厂家不同，设备驱动程序也不一样)
+
+   <img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq2s96j34j30tu07811e.jpg" alt="WeChatf20c0e99b2c89b0a643a4067a2cee893.png" style="zoom: 33%;" />
+
+   
+
+   逻辑设备表(LUT)管理方式有2种：
+
+   第一种，**整个系统只设置一张LUT**，用户不能使用系统命名逻辑设备名，只适用于单用户操作系统。
+
+   第二种，**每个用户设置一张LUT**，系统会在用户登陆为其创建一个用户管理进程，LUT就存放在用户进程的PCB中。
+
+   
+
+#### 设备驱动程序
+
+负责对硬件设备的具体控制，将上层的命令(read、write)转换成特定设备能听得懂的操作。包括设置寄存器：检查设备状态等。
+
+注：设备驱动程序一般会以一个独立进程的方式存在。
+
+
+
+#### 中断处理程序
+
+当I/O任务完成，I/O控制器会发出一个**中断信号**。系统根据**中断信号类型**找到相应**中断处理程序**并执行。
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq34bv6foj30q00hkh4l.jpg" alt="WeChatd54bb74a332e17458024cb1771e4952b.png" style="zoom:33%;" />
+
+
+
+------
+
+### I/O 核心子系统
+
+![WeChatf771aaae62af4022f925e79aaea327ef.png](http://ww1.sinaimg.cn/large/008aPpVGgy1gnq3bit5knj31hi0fuqpv.jpg)
+
+#### 假脱机技术
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq6ldit1wj31am0qc4qq.jpg" alt="WeChat4948d2cb79394c6d714b8b892b3d4ee3.png" style="zoom:33%;" />
+
+
+
+**假脱机技术**，又称**SPOOLing技术**。是用软件的方式模拟脱机技术
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq6ocmiabj317e0mc4qp.jpg" alt="WeChat213943132f4163e48339ab0ed925b024.png" style="zoom:33%;" />
+
+ 
+
+独占式设备：只允许各个进程串行使用
+
+共享设备：允许多个进程"同时"使用
+
+
+
+**共享打印机原理**
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq6si3j12j318y0fawtz.jpg" alt="WeChat51671b318305659549883798394ea9c9.png" style="zoom:33%;" />
+
+当多个用户进程提出输出打印请求，系统会答应，但不是真正分配打印机。而是为每个进程做以下两件事：
+
+1. 在磁盘输出井中为进程申请一个空闲缓冲区，并将要打印的数据送入其中
+2. 为用户进程申请一张空白的打印请求表，并将用户打印请求放入表中(起始就是打印数据存放的磁盘位置信息)，再将该表挂到假脱机文件队列上
+
+当打印机空闲，输出进程会从文件队列对头取出一张打印请求表，把要求打印的数据从输出井传送到输出缓冲期，再输出到打印机进行打印。
+
+
+
+虽然系统只有一个打印机，但每个进程提出打印请求时，系统都为其在输出井分配一个存储区(相当于分配了一个逻辑设备)，使每个用户进程觉得自己在独占一台打印机，从而实现打印机共享。
+
+SPOOLing技术可以把一台物理设备**虚拟**成逻辑上的多台设备，**将独占式设备改造成共享设备**。
+
+------
+
+
+
+#### 设备的分配与回收
+
+设备固有属性可以分为：独占设备、共享设备、虚拟设备
+
+虚拟设备：采用SPOOLing改造的独占设备
+
+
+
+##### 从安全性考虑分配方式
+
+- 安全分配方式
+
+  为进程分配一个设备后就将进程组设，本次I/O完成后才唤醒。
+
+  一个时间段内每个进程只能使用一个设备
+
+  优点：破坏了“请求和保持”条件，不会死锁
+
+  缺点：对于一个进程来说，CPU和I/O设备只能串行工作
+
+- 不安全分配方式
+
+  分配设备后继续执行，还可以发出新的I/O请求。直到请求得不到满足才阻塞进程
+
+  一个进程可以同时使用多个设备
+
+  优点：CPU和I/O任务并行处理
+
+  缺点：可能发生死锁
+
+
+
+##### 静态分配和动态分配
+
+
+
+静态分配
+
+进程运行前为其分配全部所需资源，运行结束后归还资源。
+
+破坏了“请求和保持“条件，不会有死锁
+
+
+
+动态分配
+
+进程运行过程中动态申请设备资源，可采用**银行家算法避免死锁**。
+
+
+
+##### 设备分配管理中的数据结构
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq79g75wbj311k0k617n.jpg" alt="WeChatd9be460ae4f0dab69c7b86723c3184cb.png" style="zoom:33%;" />
+
+**设备控制表(DCT)**:系统为每个设备配置一张DCT，用于记录设备状况
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq7bto9q2j31340c84qp.jpg" alt="WeChat03a434a3033ea99a91140432bb4c03fe.png" style="zoom:33%;" />
+
+
+
+**控制器控制表(COCT)**: 每个设备控制器都会有一张对应的COCT。
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq7e2nulbj313e09k4k0.jpg" alt="WeChat49f787a6f81d4cfbd6ad5583309cfbd0.png" style="zoom:33%;" />
+
+
+
+**通道控制表(CHCT)**:每个通道有一张CHCT。
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq7f48c01j314w09qkbs.jpg" alt="WeChatec13da9ad02b85ec8632d67880e8c307.png" style="zoom:33%;" />
+
+
+
+**系统设备表(SDT)**: 记录了系统中全部设备情况，每个设备对应一个表目。
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq7ggeesoj30zy09u4ae.jpg" alt="WeChat268b8d93732ed08c2710d1c388171ef0.png" style="zoom:33%;" />
+
+
+
+##### 设备分配的步骤
+
+1. 根据进程请求的设备物理名照SDT
+2. 根据SDT找到DCT，若设备忙碌则将进程PCB挂到设备等待队列中，若不忙碌则将设备分配给进程。
+3. 根据DCT找到COCT，若控制器忙碌则将进程PCB挂到控制器等待队列中，若不忙碌则将控制器分配给进程。
+4. 根据COCT找到CHCT，若通道忙碌则将进程PCB挂到通道等待队列中，若不忙碌则将通道分配给进程。
+
+
+
+**只有设备、控制器、通道三者都分配成功，这次设备分配才算成功，之后便可以启动I/O进行数据传输。**
+
+
+
+根据设备物理名调用存在的问题是： 如果操作系统有两台打印机，A和B。进程1请求A，进程2也请求A，此时有一方会阻塞，但B打印机缺闲置。 如果进程只需提供逻辑设备名(打印机)，然后由系统进程分配空闲的设备，就能解决这个情况
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq7u05qt0j31700cmwx2.jpg" alt="WeChatef4a472cd66595c5101d184c65624a45.png" style="zoom:33%;" />
+
+------
+
+#### 缓冲区管理
+
+缓冲区是一个存储区域，可以用专门的硬件寄存器组成，也可以用内存作为缓冲区。
+
+使用**硬件作为缓冲区的成本高，容量也较小**，一般仅用在速度要求非常高的场合(如存储器管理中所用到的联想寄存器，由于对页表的访问频率极高，因此用速度很快的联想寄存器来存放页表项的副本)
+
+一般情况下，用**内存做缓冲区**。“设备独立性软件”的缓冲区管理就是要组织好这些缓冲区
+
+
+
+##### 缓冲区的作用
+
+- 缓和CPU与I/O设备之间速度不匹配的矛盾
+- 减少对CPU的中断频率，放宽CPU中断相应时间的限制
+- 解决了数据粒度不匹配问题
+- 提高了CPU与I/O设备之间的并行性
+
+
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq840k8x7j31am0diqq9.jpg" alt="WeChata2b0e803499c99cc91d7be18af1d9ead.png" style="zoom:33%;" />
+
+
+
+
+
+##### 缓冲区管理策略
+
+###### 单缓冲
+
+若采用单缓冲策略，操作系统会在主存中为其分配一个缓冲区
+
+注意：当缓冲区数据非空时，不能往缓冲区冲入数据；缓冲区非满时，不能把缓冲区数据传出。
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq89y5u02j31bq0hch9p.jpg" alt="WeChatd222328886d3df8e8c7af213cfb567dc.png" style="zoom:33%;" />
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq8b2cxkij31di0hwb0q.jpg" alt="WeChat2f23f3a0d2c257517d6470aca8fe2db6.png" style="zoom:33%;" />
+
+
+
+单缓冲区策略，处理一块数据**平均耗时Max(C,T)+M**
+
+
+
+###### 双缓冲
+
+操作系统在主存为进程分配两个缓冲区
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq8djb6j0j31cg0k6b06.jpg" alt="WeChatcccf7cd4c0f35066da7c21aa824f28e0.png" style="zoom:33%;" />
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq8ftceraj317u0jmnm2.jpg" alt="WeChateb6e9b2e6950c55945d9cd19ffc4b695.png" style="zoom:33%;" />
+
+
+
+双缓冲策略处理一个数据块平均**耗时Max(T,C+M)**
+
+
+
+###### 循环缓冲区
+
+将多个**大小相等**的缓冲区链接成一个**循环队列**。
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq8neg312j30uu0gkk2a.jpg" alt="WeChatd56a192f1a74794879974372d45daae7.png" style="zoom:33%;" />
+
+
+
+###### 缓冲池
+
+缓冲池由系统中共用的缓冲区组成。这些缓冲区按使用情况可以分为：空缓冲队列、装满输入数据的缓冲队列(输入队列)、装满输出数据的缓冲队列(输出队列)
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq8s0obtuj31ao0l41kx.jpg" alt="WeChat1e2f5adbca5ae79bc9436f49abd26225.png" style="zoom:33%;" />
+
+
+
+##### 单/双缓冲通信时的区别
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq8ijv08cj31300eqdyu.jpg" alt="WeChatdec924827bde4e7352e82a2f6ca076b9.png" style="zoom: 33%;" />
+
+通信时使用单缓冲区，任意时刻只能实现数据的**单向**传输。
+
+
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnq8kbfb0pj30rw0f4ajd.jpg" alt="WeChat089d33f9b1a6b5b1733ee153f3dc96a0.png" style="zoom:33%;" />
+
+若使用双缓冲区进行通信，同一时刻可以实现**双向**的数据传输
+
+
+
+
+

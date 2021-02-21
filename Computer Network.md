@@ -337,17 +337,21 @@ TCP的拥塞控制有四种算法,即**慢开始、拥塞避免、快重传和�
 
 涉及到的协议：
 
-DNS
+- DNS
 
-HTTP
+- HTTP
 
-TCP
+- TCP
 
-IP
+- IP
 
-OPSF   路由器选择协议：根据Dijkstra构建路由表
+- OPSF  
 
-ARP	 Address Resolution Protocol, IP地址转换成MAC地址（网络层协议）
+  路由器选择协议：根据Dijkstra构建路由表
+
+- ARP
+
+  Address Resolution Protocol, IP地址转换成MAC地址（网络层协议）
 
 
 

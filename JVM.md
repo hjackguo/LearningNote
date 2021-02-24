@@ -617,5 +617,385 @@ Top-of-Stack-Cashing
 
 Dynamic Linking
 
+-  每一个帧栈内部都包含一个指向**运行时常量池**中该**栈帧所属方法的引用**。包含这个应用目的是**实现动态链接**。
+- Java源文件编译到字节码文件后，所有变量和方法应用都作为符号引用保存在class文件的常量池里。**动态链接将这些符号引用转换为调用方法的直接引用**。
 
 
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnx675ukygj31840jyx5t.jpg" alt="WeChat6982b74fc0b4fb4cc2da7951a313b9ca.png" style="zoom: 50%;" />
+
+
+
+##### 方法返回地址
+
+- 存放该方法的PC寄存器的值
+- 一个方法结束，有两种方式
+  - 正常执行完成
+  - 出现未处理的异常，非正常退出
+- 方法退出后都返回到方法调用的位置。方法正常退出时，**调用者的PC计数器值作为返回地址**。异常退出的，返回地址要通过异常表来确定，栈帧一般不会保存这部分信息。
+
+
+
+------
+
+
+
+#### 方法的调用
+
+
+
+- 静态链接
+
+  当一个字节码文件被装载进JVM内部时，如果被调用的**目标方法在编译期可知**，且运行期坚持不变。这种情况下将调用方法的符号引用转换为直接引用的过程称为静态链接。
+
+- 动态链接
+
+  如果**被调用的方法在编译期无法被确定下来**，只能够在程序运行期将调用方法的符号引用转换为直接引用，这是动态链接。
+
+
+
+- 早期绑定
+
+  被调用的目标方法在编译期可知，且运行时保持不变
+
+- 晚期绑定
+
+  被调用的方法编译期无法被确定，只能在程序运行期根据实际类型绑定的相关方法。
+
+
+
+**虚方法和非虚方法**
+
+- 非虚方法
+  - 编译期就确定了具体调用版本，运行期间不可变
+  - **静态方法、私有方法、final方法、实例构造器、父类方法都是非虚方法**
+- 虚方法
+
+
+
+
+
+**虚拟机方法调用指令**
+
+- 普通调用指令
+
+  1. invokestatic   调用静态方法
+  2. invokespecial  调用<init>方法
+  3. invokevirtual   调用虚方法 （除了final）
+  4. invokeinterface  调用接口方法
+
+- 动态调用指令
+
+  1. invokedynamic  动态解析出需要调用的方法，然后执行
+
+     Lambda的实现体现了动态调用
+
+
+
+- 静态类型语言
+
+  判断变量自身的类型信息 (Java )
+
+- 动态类型语言
+
+  判断变量值的类型信息，变量没有类型信息(python)
+
+
+
+**Java中方法重写的本质：**
+
+1. 找到操作数栈顶的第一个元素所执行的对象的实际类型，记作C。
+2. 如果在过程结束；如果不同类型C中找到与常量中的描述符合简单名称都相符的方法，则进行访问权限校验，如通过直接引用，不通过则返回java.lang.IllegalAccessError
+3. 否则，按照继承关系从下往上依次对C的各个父亲进行第2步搜索和验证。
+4. 如果没找到合适方法，抛出java.lang.AbstractMethodError.
+
+
+
+**虚方法表**
+
+为了提高性能，JVM采用在类的方法区建立一个虚方法表来实现，使用索引表代替查找。
+
+创建时机 -> 类加载过程中链接阶段
+
+
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGly1gnxue34twsj30pu0iw1cu.jpg" alt="WeChatb6cb90daf2d50812708754c4909a45f7.png" style="zoom: 50%;" />
+
+
+
+------
+
+#### 栈相关的面试题
+
+
+
+-Xss设置栈大小
+
+定容：  StackOverFlow
+
+允许扩容： 内存不足时  OutOfMemory
+
+
+
+
+
+**举例栈溢出的情况**
+
+递归调用，太深时会出现
+
+
+
+**调整栈大小，就能保证不出现溢出吗**
+
+不能，只能让StackOverFlow出现的时间更晚
+
+
+
+**分配的栈内存越大越好吗**
+
+不是的。会挤占其它内存结构的空间
+
+
+
+**垃圾回收是否设计虚拟机栈**
+
+不会！
+
+
+
+**方法中定义的局部变量是否线程安全**
+
+具体问题具体分析
+
+
+
+作用域是否在方法中
+
+内部产生内部消亡  ---安全
+
+传入或传出 ---- 不安全
+
+------
+
+
+
+### 本地方法栈
+
+
+
+**本地方法接口**
+
+**一个Native Method就是一个Java调用非Java方法的接口**。该方法实现是非Java实现的接口。
+
+本地方法用**native**关键字标识
+
+有些层次任务用Java实现不方便，或者对程序效率很在意，因此需要Native Method
+
+
+
+**Java虚拟机栈用于管理Java方法调用，本地方法栈用于管理本地方法的调用**
+
+
+
+**本地方法栈线程私有**
+
+
+
+本地方法栈内存分配
+
+- 固定内存
+- 可扩展内存
+
+
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGly1gnxwd4upvwj30os0jok8a.jpg" alt="WeChat68cf6497dbd2cebff7e0b1d5f6ec76ca.png" style="zoom:50%;" />
+
+
+
+**当一个线程调用一个本地方法时，它就不受虚拟机限制。**
+
+
+
+------
+
+### 堆
+
+-Xms10m  堆的起始内存    等价于 -XX: InitialHeapSize
+
+-Xmx10m  堆的最大内存    等价于 -XX:MaxHeapSize
+
+
+
+- 一个进程创建一个JVM实例，**一个JVM实例只有一个堆内存**。
+- 堆区在JVM启动的时候就创建了，其空间大小也确定了。
+- 所有线程共享Java堆，可以划分线程私有的缓冲区( Thread Local Allocation Buffer，TLAB)
+- 几乎所有对象实例和数组都应该放在堆中
+- 对象和数组几乎不保留在栈上，栈帧中保存对象和数组的引用，指向堆。
+- 方法结束后，对象不会马上从堆里消失，需要等到GC
+
+
+
+#### 内存细分
+
+垃圾收集器大部分都基于**分代收集理论**。堆空间细分为：
+
+Java 7主要有： 新生代+老年代+永久代
+
+Java 8之后的内存逻辑有三部分： 新生代+老年代+元空间
+
+
+
+- Young Generation Space
+
+  新生代，分为Eden和Survivor
+
+- Tenure generation space
+
+  老年代
+
+- Meta Space
+
+  元空间
+
+
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGly1gnxx7zwupqj30su0gkdtk.jpg" alt="WeChat27edda76af5c437240e0523e49a0087f.png" style="zoom: 50%;" />
+
+
+
+**堆空间大小设置只限制了新生代，老年代。限制不了元空间。**
+
+
+
+
+
+#### 新生代和老年代
+
+- 年轻代可以划分为Eden空间、Survivor0空间和Survivor1空间
+
+- 如果项目里内存数据生命周期较长，可以把老年代调大一点
+
+  -XX:NewRatio=2,表示新生代占1，老年代占2。新生代占整个堆的1/3
+
+- 新生代中，默认情况下，Eden:Survivor0:Survivor1 = 8:1:1 
+
+  -XX:SurvivorRatio=8
+
+- -XX:-UseAdaptiveSizePolicy   -关闭/+打开 自适应的内存分配策略
+
+- **几乎**所有的Java对象都是从Eden区被new出来
+
+- 绝大部分Java对象的销毁在新生代进行
+
+  研究表明新生代中80%对象是“朝生夕死”
+
+- -Xmn 设置新生代最大内存大小
+
+  
+
+#### 对象分配
+
+Young GC/Minor GC 指新生代的GC
+
+
+
+Eden区满时，触发Young GC
+
+Survivor满时，不会触发Young GC
+
+每个对象有年龄计数器，新生代中每活过一次GC,计数器+1
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGly1gny5ce7fvvj315w0gsdy5.jpg" alt="WeChata2b1ae1cbc9c2e04172ffbf717e492d3.png" style="zoom:50%;" />
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGly1gny5f2rgqlj314e0d0h1d.jpg" alt="WeChatb7dd02bf95f22ef071d6539d3405c568.png" style="zoom:50%;" />
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGly1gny5hztkcaj31gm0die0i.jpg" alt="WeChat33a2162f6ba73e17a28fe62e4b46d63b.png" style="zoom:50%;" />
+
+
+
+- 针对幸存者S0，S1区总结：复制之后有交换，谁空谁是to
+- 关于垃圾回收：频繁在新生代收集，很少在老年代收集，几乎不在元空间收集。
+
+
+
+
+
+**对象分配特殊情况**
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGly1gny5sptrooj311c0vqb29.jpg" alt="WeChata68c6274241a0665f137c941134a6af4.png" style="zoom:50%;" />
+
+
+
+#### GC类型
+
+- **Minor GC** 
+
+  Young GC.  (Eden，S0，S1)
+
+  当Eden区满时，触发Minor GC
+
+  Survivor满不会出发GC
+
+  Minor GC 会引发STW，暂停其它线程
+
+  <img src="http://ww1.sinaimg.cn/large/008aPpVGly1gny9sxmre2j310q0lgh85.jpg" alt="WeChat52afda8374c4ba47b7bdcbf474070eb5.png" style="zoom:33%;" />
+
+- **Major GC**
+
+  Old GC
+
+  Major和Full GC速度比Minor GC慢10倍，STW时间更长
+
+- **Full GC**
+
+  收集整个java**堆和方法区**的垃圾收集，Full GC要避免。
+
+  
+
+  Full GC触发条件：
+
+  1. 调用System.gc()，系统建议执行Full GC
+  2. 老年代空间不足
+  3. 方法区空间不足
+  4. 通过Minor GC进入老年代的平均大小大于老年代可用内存
+  5. 由Eden区、from spcae 向 to space区复制时，对象大于To space可用内存，则把该对象转到老年代，且老年代的可用内存大小小于该对象大小
+
+
+
+**堆空间分代思想**
+
+**优化GC性能**。不太容易被回收的对象，GC次数少，这样这部分不需要频繁移动。如果生命周期短的，就GC次数多。
+
+
+
+#### TLAB
+
+为什么要有TLAB (Thread Local Allocation Buffer)?
+
+- 堆区是线程贡献
+- 对象实例的创建在JVM非常频繁，并发情况下堆区划分内存是**非线程安全**的。
+- 避免多线程操作同一地址，需要加锁，影响分配速度。
+
+
+
+什么是TLAB？
+
+- 从内存模型而不是垃圾收集角度，对Eden区域继续划分，**JVM为每个线程分配了一个私有缓存区域**，它**包含在Eden**空间。
+- 多线程同时分配内存时，TLAB可以**避免非线程安全**问题，还能提升内存分配吞吐量，这种内存非配方式称为**快速分配策略**。
+- 不是所有对象实例都能在TLAB中成功分配，但**JVM将TLAB作为内存分配首选**。
+- TLAB空间非常小，仅占整个Eden空间1%
+- 一旦一个对象在TLAB分配内存失败，JVM使用**加锁机制**确保数据操作原子性，在Eden空间分配内存。
+
+ 
+
+
+
+**TLAB下内存分配流程**
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGly1gnybmgvp0sj310e0higzk.jpg" alt="WeChat86caf84a05d34cb3aeb4359c590d8c37.png" style="zoom:50%;" />
+
+
+
+**堆空间都是共享的吗？**
+
+不是，有一个每个线程私有的TLAB空间。为了解决分配内存非线程安全而设计。

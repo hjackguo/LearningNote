@@ -122,6 +122,7 @@ right join
 - 单值索引：一个索引只包含**单个列**，一个表可以有多个单列索引。
 - 唯一索引：索引列的值必须**唯一**，但允许空值
 - 复合索引：一个索引包含**多个列**。
+- 聚簇索引：一般来说，聚簇索引就是主键，聚簇索引的叶子结点中，存着主键对应行的所有数据，通过聚簇索引查询，不需要回表。
 
 ```mysql
 create [unique] index indexName on mytable(columnname(length))
@@ -839,6 +840,26 @@ show status like 'table%';
 偏向InnoDB，开销大，加锁慢；会出现死锁；锁定粒度最小，发生锁冲突的概率最低，并发度也最高。
 
 InnoDB和MyISAM最大不同有两点：一是**支持事务**(TRANSACTION)；二是采用了**行级锁**。
+
+
+
+**事物的ACID特性**
+
+- Atomic
+
+  原子性
+
+- Consistency
+
+  一致性
+
+- Isolation
+
+  隔离性
+
+- Durability
+
+  持久性
 
 
 

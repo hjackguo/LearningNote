@@ -1473,23 +1473,103 @@ JSON with Padding, 它是利用script标签的src连接可以访问不同源的�
 #### 89.简单工厂和抽象工厂有什么区别？
 
 - 简单工厂：用来生产同一等级结构中的任意产品，等于增加新的产品，无能为力。
+
 - 工厂方法：用来生产同一等级结构中的固定产品，支持添加任意产品。
+
 - 抽象工厂：用来生产不同产品族的全部产品，对于增加新的产品，无能为力；支持增加产品族。
-- 
 
+  
 
+**抽象工厂类实现源码**
 
+1.苹果有红苹果青苹果等，创建苹果抽象类
 
+```java
+public abstract class FruitsApple {
 
+	public abstract void describe();
+}
+```
 
+2.创建苹果类
 
+```java
+public class Apple extends FruitsApple {
+	@Override
+	public void describe() {
+		System.out.println("我是苹果");
+	}
+}
+```
 
+3.创建香蕉抽象类
 
+```java
+public abstract class FruitsBanana {
+	public abstract void describe();
+}
+```
 
+4.创建香蕉
 
+```java
+public class Banana extends FruitsBanana {
+	@Override
+	public void describe() {
+		System.out.println("我是香蕉");
+	}
+}
+```
 
+5.创建商人工厂类
 
+```java
+public class BusinessmanAbstractFactory {
+	/**
+	 * 创建苹果
+	 * @param name 指定创建的苹果类路径
+	 * @return FruitsApple
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws ClassNotFoundException
+	 */
+	public static FruitsApple createApple(String name) throws InstantiationException, IllegalAccessException, ClassNotFoundException{
+		if("".equals(name) || name == null){
+			return null;
+		}
+		return (FruitsApple) Class.forName(name).newInstance();
+	}
+	
+	/**
+	 * 创建香蕉
+	 * @param name 指定创建的香蕉类路径
+	 * @return FruitsBanana
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws ClassNotFoundException
+	 */
+	public static FruitsBanana createBanana(String name) throws InstantiationException, IllegalAccessException, ClassNotFoundException{
+		if("".equals(name) || name == null){
+			return null;
+		}
+		return (FruitsBanana) Class.forName(name).newInstance();
+	}
+}
+```
 
+6.创建测试类
+
+```java
+public class Test {
+	public static void main(String[] args) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+		FruitsApple apple = BusinessmanAbstractFactory.createApple("com.newtt.Apple");
+		apple.describe();
+		FruitsBanana banana = BusinessmanAbstractFactory.createBanana("com.newtt.Banana");
+		banana.describe();
+	}
+}
+
+```
 
 
 

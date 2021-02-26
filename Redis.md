@@ -1,3 +1,17 @@
+## Redis数据类型
+
+- String
+
+- List
+
+- Set
+
+- Hash
+
+- Zset
+
+  有序集合。
+
 ## Redis持久化
 
 **RDB持久化(默认)**

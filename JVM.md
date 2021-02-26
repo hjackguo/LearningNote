@@ -999,3 +999,396 @@ Survivor满时，不会触发Young GC
 **堆空间都是共享的吗？**
 
 不是，有一个每个线程私有的TLAB空间。为了解决分配内存非线程安全而设计。
+
+
+
+
+
+#### 逃逸分析
+
+**堆是分配对象的唯一选择吗？**
+
+如果经过逃逸分析(Escape Analysis)后发现，一个对象并**没有逃逸出方法**的话，那么可能被优化成**栈上分配**。
+
+
+
+逃逸分析的基本行为就是分析对象动态作用域是否在方法内。看new的对象是否有可能在方法外被调用。
+
+
+
+开启逃逸分析
+
+-XX:+DoEscapeAnalysis
+
+
+
+使用逃逸分析，JIT编译器可对代码进行如下优化：
+
+1. 栈上分配
+
+   将堆分配转化为栈分配
+
+2. 同步省略
+
+   只被一个线程使用，不需要考虑同步问题。
+
+3. 分离对象或标量替换
+
+   **标量**(Scaler)无法分解成更小数据的数据。Java中基本数据类型就是标量。
+
+   **聚合量**(Aggregate)能被继续分解，对象就是聚合量。
+
+   经过逃逸分析不被外界访问的话，JIT能优化，把对象拆解成若干个成员变量代替，这个就是**标量替换**。
+
+   -XX:+EliminateAllocations 开启标量替换，允许对象被打散分配到栈上
+
+
+
+### 方法区
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnyzgmngibj30w40g8qnw.jpg" alt="WeChat9532a81a47947ddf0b29b40ae3539022.png" style="zoom:50%;" />
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnyzl3edu3j311e0l019y.jpg" alt="WeChat48be6297cd906c455f98d2f0572c2f8d.png" style="zoom:50%;" />
+
+**方法区看作是一块独立于Java堆的内存空间**。方法区在逻辑上属于堆的一部分，但一些简单的实现可能不会在方法区去压缩或垃圾回收。
+
+- 方法区(Method Area)和Java堆一样，线程共享
+- 方法区在虚拟机启动时被创建
+- 大小设置固定大小或可扩展
+- 方法区大小决定了系统可以存多少个类。如果类太多，会出现 java.lang.OutOfMemorryError: Metaspace
+
+
+
+**方法区演变**
+
+- Java 7 ： 永久代 ，虚拟机内存
+
+- Java 8:     元空间，本地内存
+
+  -XX:MetaspaceSize=100m   高水平线，一旦触及，Full GC出发并卸载没用的类，后面根据GC后内存动态调整
+
+  -XX:MaxMetaspaceSize=100m
+
+
+
+**如何解决OOM**
+
+1. 一般使用内存映像分析工具堆dump出来的堆转储快照进行分析，重点是确认内存中的对象是否是必要的，也是要分清楚到底是内存泄漏(Memory Leak)还是内存溢出(Memory Overflow)
+2. 如果是内存泄漏，可以通过工具查看泄漏对象到GC Roots的引用链。于是就能找到泄漏对象是通过怎么样的路径与GC Roots相关联并导致垃圾收集器无法自动回收她们。掌握了泄漏对象的类型信息，已经GC Roots引用链信息，就可以精确地定位出泄漏代码的位置。
+3. 如果不存在内存泄漏，那就查看堆参数(-Xmx与-Xms)，能否调大，从代码上查看某些生命周期较长的对象，分析能否缩短其生命周期 (例如不需要静态的，就不要静态)。
+
+
+
+
+
+#### 方法区的内部结构
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnz1hjl9vij310u0kee3d.jpg" alt="WeChatc3ed03fab7084b2d4b34e600d113ec14.png" style="zoom: 50%;" />
+
+方法区主要存放内容如下：**类型信息、常量、静态变量、即时编译器编译后的代码缓存**等。
+
+
+
+##### **类型信息**
+
+- 这个类型的完整有效名称(全名=包名.类名)
+- 这个类型直接父类的完整有效名
+- 这个类型的修饰符(public, abstract, final)
+- 这个类型直接接口(implement)的一个有序列表
+
+
+
+##### **域(Field)信息**
+
+域是指成员变量，属性
+
+- JVM必须在方法区保存类型的所有域的相关信息以及域的声明顺序。
+- 域的相关信息包括：域名称、域类型、域修饰符 (public, private, protected, static, final, volatile, transient)
+
+
+
+##### **方法(Method)信息**
+
+- 方法名称
+
+- 方法的返回类型
+
+- 方法参数数量和类型(按顺序)
+
+- 方法修饰符(public, private, protected, static, final, synchronized, native, abstract)
+
+- 方法的字节码(bytecodes)、操作数栈、局部变量表及大小
+
+- 异常表
+
+  每个异常处理的开始位置、结束为止、代码处理在程序计数器中的偏移地址、被捕获的异常类的常量池索引
+
+
+
+##### **运行时常量池**
+
+方法区，内部包含了运行时常量池
+
+.class文件中有常量池(Constant pool)，加载到方法区后，就成了运行时常量池
+
+```java
+ClassFile {
+    u4             magic;
+    u2             minor_version;
+    u2             major_version;
+    u2             constant_pool_count;
+    cp_info        constant_pool[constant_pool_count-1];
+    u2             access_flags;
+    u2             this_class;
+    u2             super_class;
+    u2             interfaces_count;
+    u2             interfaces[interfaces_count];
+    u2             fields_count;
+    field_info     fields[fields_count];
+    u2             methods_count;
+    method_info    methods[methods_count];
+    u2             attributes_count;
+    attribute_info attributes[attributes_count];
+}
+```
+
+常量池包括各种字面量和对类型、域和方法的符号引用。
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnz39g9x59j30ye0gqhdl.jpg" alt="WeChat40da8b5abb1dfc754adb27166ecaa502.png" style="zoom:50%;" />
+
+常量池可以看作一张表，虚拟机指令根据这张常量池表找到要执行的类名、方法名、参数类型、字面量灯类型
+
+
+
+**运行时常量池**
+
+- 运行时常量池(Runtime Constant Pool)是方法区的一部分
+- 常量池表(Contant Pool Table)是class文件的一部分，**用于存放编译期生成的各种字面量与符号引用**，这部分内存在**类加载后存放到方法区的运行时常量池中**。
+- **JVM为每个已加载类型(类或接口)都维护一个常量池**。池中的数据项像数组项一样，通过索引访问。
+- 运行时常量池相对class文件常量池的一大重要特征是：具备**动态性**。
+- 当创建类或接口的运行时常量池时，如果构造运行时常量池所需内存大于方法区能提的最大容量，JVM会抛出OutOfMemoryError.
+
+
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnz6whn817j326o16g1kz.jpg" alt="WeChat96b1ce6653593c3c89e31aa562a4e68e.png" style="zoom:33%;" />
+
+
+
+
+
+
+
+**全局常量**
+
+static final
+
+被声明为static final的类常量的处理方法则不同，每个全局常量在编译的时候就被分配了。通过.class可查看这一分配。
+
+
+
+#### 方法区的演进
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnzfgl9goij32so0y8u10.jpg" alt="WeChat1b243ab32f204f3a3d6c0cf459fe537d.png" style="zoom:33%;" />
+
+
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnzfmljshyj32tc10sb2a.jpg" alt="WeChat4063b859b5916c189610fee8f773bbba.png" style="zoom:33%;" />
+
+
+
+元空间相比永久代优势在于：
+
+- 为永久代设置空间大小很难确定。
+
+  元空间不在虚拟机中，而是直接分配在系统内存。
+
+- 对永久代的调优是很困难的。
+
+
+
+**jdk7 StringTable为什么要从永久代放回堆空间？**
+
+因为永久代回收效率很低，在Full GC的时候才触发，而full gc是老年代、永久代空间不足才触发
+
+这就到这StringTable回收效率不高，我们开发过程大量字符串被创建，回收效率低导致内存不足。
+
+所以，**放到堆里，能及时回收**。
+
+
+
+**静态变量存在哪？**
+
+静态引用的对象实体始终存在堆空间。
+
+new 对象始终放在堆空间
+
+JDK 7及其以后版本HotSpot虚拟机选择把**静态变量与类型**在Java语言一端的映射Class对象存放在一起，存储于**Java堆**中。
+
+
+
+#### 方法区的垃圾回收
+
+方法区的回收效果比较难以令人满意，尤其是类型的卸载，条件相当苛刻
+
+方法区的垃圾收集主要包括：**常量池中废弃的常量**和**不再使用的类型**。
+
+**只要常量池中的常量没有被任何地方引用，就可以被回收。**
+
+------
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnzhrqxca5j33ec1j8u10.jpg" alt="WeChat26dc1c11a0ff9cd59143846744477ad0.png" style="zoom:50%;" />
+
+
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnzhxibfhej31ds0qc4dl.jpg" alt="106181614214458_.pic_hd.jpg" style="zoom: 50%;" />
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnzi0fsukrj33341e0tj3.jpg" alt="106201614214684_.pic_hd.jpg" style="zoom:50%;" />
+
+
+
+------
+
+## 本处跳过很多内容P102开始
+
+
+
+### 垃圾标记算法
+
+- 引用计数算法 （Python）
+
+- 可达性分析算法 (Java使用此种)
+
+  这个算法的实质在于将一系列GC Roots作为初始的存活对象合集（live set），然后从该合集出发，探索所有能够被该合集引用到的对象，并将其加入到该和集中，这个过程称之为标记（mark）。 最终，未被探索到的对象便是死亡的，是可以回收的。
+
+### 垃圾收集算法
+
+
+
+#### 标记-清除算法(Mark-Sweep)
+
+当堆中的有效内存空间(available memory)被耗尽的时候，就会停止整个程序(STW)。然后进行两项操作：
+
+- 标记
+
+  Collector**从引用根结点开始遍历**，**标记所有被引用的对象**。一般是在对象的Header中记录为可达对象。
+
+- 清除
+
+  Collector对**堆内存**从头到尾进行线性**遍历**，如果发现某个对象在其Header中**没有标记为可达对象，则将其回收**。
+
+**标记可达对象，清除不可达对象。**
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1go02yxx504j30q60ksajv.jpg" alt="WeChat0941a4cbde793eab29ce8886fe1d0d49.png" style="zoom: 50%;" />
+
+**优点**
+
+- 实现简单
+
+**缺点**
+
+- 效率不算高
+- 在进行GC的时候，需要停止整个程序，用户体验差
+- 这种方式清除出来的**内存不连续，产生内存碎片**。需要**维护一个空闲列表**。
+
+本处的清除不是从内存中抹去对象，而是把需要清除的对象的内存地址放到空闲列表。下次有新对象需要加载时，判断垃圾的位置空间是否够，如果够，就存放。
+
+
+
+#### 复制算法(Copying)
+
+**核心思想：**
+
+将活着的内存空间分为两块，每次只使用其中一块，在垃圾回收时将正在使用的内存中的**存活对象复制到未被使用的内存块**中，之后**清除**正在使用的内存块中的所有对象，交换两个内存的角色，最后完成垃圾回收。
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1go03xonjj4j31dk0q81b8.jpg" alt="WeChatea0cca1834050556756488a6cb16a629.png" style="zoom:50%;" />
+
+本算法是新生代Survive区的复制算法。
+
+
+
+**优点**
+
+- 没有标记和和清除的过程，**实现简单，运行高效**
+- 复制过去保证空间连续性，**不会有内存碎片**
+
+
+
+**缺点**
+
+- 需要**两倍的内存空间**
+- 由于**对象的内存地址变动**了，**需要修改所有引用了这个对象的指针**，开销大。
+
+
+
+注意：如果系统中存活对象很多，垃圾很少，复制算法效率不高！(特别**适合新生代的Survivor**！)
+
+
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1go055mh194j31bw0u8e81.jpg" alt="WeChata9846856e14623880aed544bed4c9875.png" style="zoom:50%;" />
+
+
+
+#### 标记-压缩算法(Mark-Compact)
+
+也称标记-整理算法
+
+**复制算法**的**高效性**是建立在**存活对象少、垃圾对象多**的情况下。这种情况一般发生在新生代，但是在老年代，更常见的情况是大部分对象都存活。因此，**基于老年代垃圾回收的特性，需要使用别的算法**。
+
+
+
+标记-清除算法的确可以应用在老年代中，但该算法效率低，还有有内存碎片，所以在标记-清除算法的基础上，提出了**标记-压缩**算法。
+
+
+
+**标记-压缩算法执行过程**
+
+1. 标记
+
+   和标记-清除算法一样，从根节点开始**标记所有被引用对象**
+
+2. 压缩
+
+   **将所有的存活对象压缩**到内存的一端，按顺序排放。
+
+   
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1go060f9c9rj31qo1eoqv5.jpg" alt="WeChat55f95f205d9365125529251692499f65.png" style="zoom:50%;" />
+
+
+
+有时标记-压缩算法也称为标记-清除-压缩算法
+
+
+
+- 标记-清除算法是一种**非移动式的回收算法**
+- 标记-压缩算法是**移动式**的
+
+
+
+**优点**
+
+- **消除**了标记-清除算法中，**内存区域分散的缺点**，我们需要给新对象分配内存时，JVM只需要持有一个内存的起始地址即可。
+- **消除**了复制算法中，**内存减半的高额代价**。
+
+
+
+**缺点**
+
+- 从效率上来说，标记-整理算法低于复制算法和标记-清除算法
+- 移动对象的同时，如果对象被其它对象引用，需要调整引用地址。
+- 移动过程中，需要STW。
+
+
+
+**算法对比**
+
+|          | Mark-Sweep       | Mark-Compact     | Copying                               |
+| -------- | ---------------- | ---------------- | ------------------------------------- |
+| 速度     | 中等             | 最慢             | 最快                                  |
+| 空间开销 | 少(但有内存碎片) | 少(没有内存碎片) | 通常需要活对象的2倍大小(没有内部碎片) |
+| 移动对象 | 否               | 是               | 是                                    |
+
+效率上来看，复制算法最快，但浪费太多内存
+
+综合来看，标记-整理算法相对来说平滑一点，但是效率上不尽人意。他比复制算法多了一个标记阶段，比标记-清除算法多了一个整理内存的阶段。
+

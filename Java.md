@@ -187,3 +187,44 @@ public class VolatileDemo {
 
 ------
 
+### Java的反射机制
+
+Reflection被视为动态语言的关键。 类加载完后，Java方法区就产生了一个Class类型的对象(一个类只有一个Class对象)，这个对象包含了类的结构信息。**这个对象就像一面镜子，透过这个镜子看到类的结构，所以称之为反射**。
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1go6kpssvljj31ck07utp9.jpg" alt="WeChatef7c2d9d0e615e094cbd2f09bc155074.png" style="zoom:50%;" />
+
+
+
+```java
+// 反射习惯类
+import java.lang.reflect.Constructor;   // 类的构造器
+import java.lang.reflect.Field;         // 属性
+import java.lang.reflect.Method; 				// 方法
+```
+
+
+
+> 反射的提供的功能
+
+- 运行时判断任意一个对象所属的类
+- 在运行时构造任意一个类的对象
+- 在运行时判断任意一个类所具有的成员变量和方法
+- 在运行时获取范型信息
+- 在运行时调用任意一个对象的成员变量和方法
+- 在运行时处理注解
+- 生成动态代理
+
+
+
+> 疑问1：通过直接new的方式或反射的方式都可以调用公共的结构，开发中到底用哪个？
+
+建议：直接new的方式。
+
+什么时候会使用：反射的方式。 反射的特征：动态性。
+
+> 疑问2：反射机制与面向对象中的封装性是不是矛盾的？如何看待两个技术？
+
+ 不矛盾。
+
+
+

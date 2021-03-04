@@ -187,6 +187,133 @@ public class VolatileDemo {
 
 ------
 
+### JAVA常见数据结构关系
+
+**Collection**
+
+- List
+  - ArrayList
+  - LinkedList
+  - Vector
+  - Stack (继承了Vector)
+- Set
+  - HashSet
+  - TreeSet
+  - LinkedHashSet
+
+**Map**
+
+- HashMap (键允许一个为null, 值允许多个null)
+- HashTable (键和值不允许null,线程安全类)
+- TreeMap
+- LinkedHashMap
+- ConcurrentHashMap
+
+
+
+#### HashMap介绍
+
+[美团HashMap介绍](https://tech.meituan.com/2016/06/24/java-hashmap.html)
+
+> HashMap内部结构
+
+HashMap = Node类型的数组+单向链表(LinkedList)/红黑树
+
+数据类型 ： **Node<K,V>[] table**
+
+
+
+官网文档：
+
+Constructs an empty `HashMap` with the default **initial capacity (16)** and the **default load factor (0.75)**.
+
+源码：
+
+```java
+    /**
+     * The default initial capacity - MUST be a power of two.
+     */
+		// 扩容时 x<<1就行，2倍
+    static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
+
+    /**
+     * The load factor used when none specified in constructor.
+     */
+    static final float DEFAULT_LOAD_FACTOR = 0.75f;
+
+		/**
+		* Constructs an empty HashMap with the specified initial capacity and load factor.
+		*/
+		HashMap(int initialCapacity, float loadFactor)
+      
+    new HaspMap() <=> new HashMap(16,0.75)
+```
+
+> HashMap扩容
+
+- 每put进一个Key-Value, size++,  threshold=Capacity*loadFacotor，当size==threshold时进行resize(扩容)
+- 扩容后大小为原来的**2倍**
+- 如果确定数据超过某个值，可以new HashMap(int initialCapacity)提前分配好，防止过程中扩容影响程序效率
+
+> HashMap如何解决哈希冲突
+
+链地址法
+
+> 为什么哈希桶数组长度大小必须2^n?
+
+一般来说，哈希桶大小设计为素数能减少碰撞。但HashMap采用2^n，主要为了在**取模和扩容时做优化**。
+
+> 多次碰撞后链表过长如何解决？
+
+红黑树。 当链表长度超过8，链表转为红黑树。
+
+> 如何确定哈希桶位置？
+
+```java
+//计算key的哈希值
+static final int hash(Object key) {   //jdk1.8 & jdk1.7
+     int h;
+     // h = key.hashCode() 为第一步 取hashCode值
+     // h ^ (h >>> 16)  为第二步 高位参与运算
+     return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+}
+// 计算哈希值对应的idx
+static int indexFor(int h, int length) {  //jdk1.7的源码，jdk1.8没有这个方法，但是实现原理一样的
+     return h & (length-1);  //第三步 取模运算
+}
+```
+
+本质上Hash算法就是三步：**取key的hashcode值(32位01)、高位运算、取模运算**。
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1go88dsqpgej31x81507wh.jpg" alt="WeChat35ecee009955feec6b29292005a12836.png" style="zoom:50%;" />
+
+
+
+>  为什么不用key的hashcode直接对(哈希桶长度-1)取模就行,要这么麻烦？。
+
+1. mod运算开销大
+2. 当length长度比较小, hashcode只有低位值参与到&运算，高位怎么变，&结果都一样，冲突概率加大。
+
+> 如何解决mod运算开销大？(为什么哈希桶长度要为2^n)
+
+当**length长度为2的n次方**时，**h%length等价于h&(length-1)**巧妙实现了计算量问题。只保留length-1数字对应的二进制位。&比%具有更高的效率。
+
+> 如何解决高位不参与index计算?
+
+为了解决这个问题，hashmap加上hashcode的高16位异或低16位的"**扰动函数**",使得length长度比较小的情况下，高16位也能影响最终的哈希值，减少了冲突概率。
+
+本图中，不扰动的话,HashCode前面28位不管怎么变，得到的index都是0
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1go88m6744ej32640j0hdt.jpg" alt="WeChate9e84dcca9a589b33777f446e3f7d2ad.png" style="zoom:33%;" />
+
+扰动后，index发生了变化
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1go88onm5htj31yk0iohdt.jpg" alt="WeChatc5195c8537adaf6dbec17f5dbe5ce0e3.png" style="zoom: 33%;" />
+
+------
+
+
+
 ### Java的反射机制
 
 Reflection被视为动态语言的关键。 类加载完后，Java方法区就产生了一个Class类型的对象(一个类只有一个Class对象)，这个对象包含了类的结构信息。**这个对象就像一面镜子，透过这个镜子看到类的结构，所以称之为反射**。

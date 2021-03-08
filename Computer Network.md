@@ -66,8 +66,6 @@
 
 
 
-
-
 ### 数据链路层
 
 **数据链路层(data link layer)**通常简称为链路层。**两台主机之间的数据传输，总是在一段一段的链路上传送的，这就需要专门的链路层协议**。在两个相邻节点之间传送数据时，**数据链路层将网络层交下来的IP数据报组装成帧**。每一帧包括**数据和必要的控制信息**(如同步信息，地址信息，差错控制等)
@@ -165,6 +163,16 @@ ACK验证接收方到发送方通道
 
 
 
+**为什么要等待2MSL后才断开连接**
+
+**MSL (Maximum Segment Lifetime), "报文最大生存时间"**。确保服务器能收到Client回复的ACK。如果不等待直接断开，第四次挥手AC K丢包了，但客户端已经关闭，此时服务器无法关闭TCP连接。
+
+
+
+![2881615201722_.pic_hd.jpg](http://ww1.sinaimg.cn/large/008aPpVGgy1gocphasvnej31b42aogt7.jpg)
+
+
+
 ## TCP和UDP协议的区别
 
 ![WeChat7ae7b65258d303d47074cc604ae5b315.png](http://ww1.sinaimg.cn/large/008aPpVGgy1gnvg2qfnouj32o60oie81.jpg)
@@ -175,7 +183,23 @@ ACK验证接收方到发送方通道
 
 
 
+> UDP首部结构
+
+8个字节
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1god5atrix9j31d00lck8s.jpg" alt="WeChatd8d5899c5e3bf0f726ee02c38e1d4bf7.png" style="zoom:50%;" />
+
+
+
 **TCP**提供面向连接的服务。在传送数据之前必须建立连接，数据传送结束后要释放连接。TCP不提供广播或多播服务。由于TCP要 提供**可靠**的，**面向连接**的运输服务(TCP的可靠体现在TCP在传递数据前，会有**三次握手**来建立连接，而且在数据传递时，有**确认、窗口、重传、拥塞控制**机制，在数据传完后，还会**断开连接**用来节约系统资源)，这难以避免增加了许多开销，如确认，流量控制，计时器以及连接管理等。这不仅使协议数据单元的首部增大很多，还要占用许多处理机资源。TCP一般用于**文件传输、发送和接收邮件、远程登录**等场景。
+
+
+
+> TCP首部结构
+
+20个字节 (最多可到60字节)
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1god5h35euhj32js13ge81.jpg" alt="WeChat16944245d90ddab342976c547bd8ce43.png" style="zoom:50%;" />
 
 
 
@@ -367,6 +391,28 @@ TCP的拥塞控制有四种算法,即**慢开始、拥塞避免、快重传和�
 
 
 
+## 常见路由协议
+
+> OSPF协议
+
+Open Shortest Path First 开放式最短路径优先
+
+运用了Dijkstra算法
+
+OSPF是基于**链路状态(度量值)**的协议
+
+
+
+> RIP协议
+
+Routing Information Protocol 路由信息协议
+
+使用**跳数**(即metric)来衡量到达目标地址的路由距离。
+
+
+
+
+
 ## 各种协议与HTTP协议之间的关系
 
 <img src="https://pic4.zhimg.com/v2-367c03a8065b12a26cccd4437e548eef_r.jpg" alt="WeChat2d1e4fc4b58096563e635405c6ddddb0.png" style="zoom: 50%;" />
@@ -456,7 +502,7 @@ www.tmall.com对应的真正域名为www.tmall.com. 。末尾的.称为根域名
 
 解析的过程就是**分级查询**
 
-(1) 现在本机的DNS里查，如果有就直接返回
+(1) 先在本机的DNS里查，如果有就直接返回
 
 (2)如果本机DNS里没有，就去根服务器查，根服务器发现域名属于com域，因此根域DNS服务器返回它管理的com域中DNS服务器的IP地址。
 

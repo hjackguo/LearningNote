@@ -314,6 +314,56 @@ static int indexFor(int h, int length) {  //jdk1.7的源码，jdk1.8没有这个
 
 
 
+#### 搜索树
+
+##### 二叉搜索树(bst)
+
+> 缺点
+
+频繁增删后，会出现以下结构。 搜索复杂度变为O(n)
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1go8ql2li2wj30r60ken2e.jpg" alt="WeChat4c8f08760065e0f522e257f57ecb6ea6.png" style="zoom: 33%;" />
+
+
+
+##### 平衡二叉搜索树(avl)
+
+主要思想： 追求极致的平衡，理想状态
+
+Math.abs(左子树深度 - 右子树深度)<=1
+
+> 缺点
+
+每一次增删，由于最求绝对平衡，树要进行结构调整，耗时。
+
+##### 红黑树
+
+自平衡二叉查找树
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1go8r0qmuyoj319w0m247x.jpg" alt="WeChat0400eb44b698975af4ed6a447f969608.png" style="zoom:33%;" />
+
+> 红黑树特性
+
+1. 每个结点要么是红的，要么是黑的。
+2. 根节点是黑的。
+3. 每个叶结点(树尾部的NULL结点)是黑的。
+4. 如果一个结点是红的，那么它的两个子结点都是黑的。
+5. 对于任一结点而言，其到叶结点树尾端的NULL指针的每一天路径都包含相同数目的黑结点。
+
+这5条性质，使得n个结点的红黑树高度始终保持在h = log n。
+
+> 红黑树比AVL树好在哪里
+
+搜索上没AVL树好，但修改上，旋转次数比AVL树少。
+
+> 红黑树三个操作
+
+1. 红黑置换
+2. 左旋
+3. 右旋
+
+
+
 ### Java的反射机制
 
 Reflection被视为动态语言的关键。 类加载完后，Java方法区就产生了一个Class类型的对象(一个类只有一个Class对象)，这个对象包含了类的结构信息。**这个对象就像一面镜子，透过这个镜子看到类的结构，所以称之为反射**。
@@ -347,11 +397,60 @@ import java.lang.reflect.Method; 				// 方法
 
 建议：直接new的方式。
 
-什么时候会使用：反射的方式。 反射的特征：动态性。
+什么时候会使用：反射的方式。 反射的特征：**动态性**。
 
 > 疑问2：反射机制与面向对象中的封装性是不是矛盾的？如何看待两个技术？
 
  不矛盾。
 
+#### 
 
+> 关于java.lang.Class类的理解
+
+1. 类的加载过程：
+
+   .class文件被加载。加载到内存中的类，我们称为运行时类，此运行时类，就作为Class的一个实例。
+
+2. Class的实例就对应着一个运行时类。
+
+3. 运行时类存在方法区，可以通过不同方式获取此运行时类。
+
+
+
+> 获取Class实例的方式
+
+```java
+/**
+ 获取Class实例的方式
+ */
+static void getClassObject() throws Exception{
+    // 方式一: 调用运行时类的属性 : .class
+    Class clazz1 = Person.class;
+    System.out.println(clazz1); // class com.company.entity.Person
+    // 方式二: 通过运行时类的对象, 调用getClass()
+    Person p1 = new Person();
+    Class clazz2 = p1.getClass();
+    System.out.println(clazz2);
+    // 方式三: 调用Class的静态方法：forName(String classPath)
+    Class clazz3 = Class.forName("com.company.entity.Person");
+    System.out.println(clazz3);
+    // 方式四: 类的加载器： ClassLoader
+    // 获取应用类加载器(又称系统类加载器)加载自己创建的类
+    ClassLoader classLoader = ReflectionTest.class.getClassLoader();
+    Class clazz4 = classLoader.loadClass("com.company.entity.Person");
+    System.out.println(clazz4);
+
+    // true 指向地址中同一个对象
+    System.out.println(clazz1==clazz2); // true
+    System.out.println(clazz2==clazz3); // true
+    System.out.println(clazz1==clazz4); // true
+}
+```
+
+1. 调运运行时类的属性 .class
+2. 调用运行时类的对象，调用getClass()
+3. 调用Class的静态方法： forName(String classPath)
+4. 通过类的加载器加载 
+   - 加载系统自带的类的话，如String, 用引导类加载器
+   - 加载自定义类的话，用系统类加载器(又称应用类加载器)
 

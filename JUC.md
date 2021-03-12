@@ -1241,7 +1241,7 @@ public interface ReadWriteLock {
 - 读-写  独占
 - 写-写  独占
 
-```mysql
+```java
 class MyCache{
     private volatile Map<Integer,Object> map = new HashMap<>();
     private ReadWriteLock readWriteLock = new ReentrantReadWriteLock();

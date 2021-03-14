@@ -158,7 +158,7 @@ Java中字符串比较用 X.compareTo(Y)方法
 
 ## 位运算
 
-### 15. 二进制中1的个数
+### 15. 二进制中1的个数 (*)
 
 请实现一个函数，输入一个整数（以二进制串形式），输出该数二进制表示中 1 的个数。例如，把 9 表示成二进制是 1001，有 2 位是 1。因此，如果输入 9，则该函数输出 2
 
@@ -255,3 +255,107 @@ Arrays.sort()后，取中间就是！
     }
 ```
 
+## 树
+
+### 07.重建二叉树 (*)
+
+输入某二叉树的前序遍历和中序遍历的结果，请重建该二叉树。假设输入的前序遍历和中序遍历的结果中都不含重复的数字。
+
+ 前序遍历 preorder = [3,9,20,15,7]
+中序遍历 inorder = [9,3,15,20,7]
+
+> 解法一 : 递归
+>
+> 时间复杂度 : O(N)
+>
+> 空间复杂度 : O(N) 
+
+把inorder序列按照 map.put(inorder[i],i) 放进map,后面可以用来索引
+
+定义函数 recur(left_pre, right_pre, left_in, right_in)
+
+1. preorder的第一个值，放进map,拿到inorder里的中节点pivot，用pivot这个点建立一个ListNode
+
+2. ListNode.left    = recur(left_pre+1, left_pre+1+(pivot - left_in - 1), left_in, pivot-1)
+
+   ListNode.right = recur(left_pre+1+ (pivot- left_in -1)+1, right_pre, pivot+1, right_in)
+
+<img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gohnn7s6rpj32881mwqv5.jpg" alt="WeChat445b822a246e70b59a19c1c64ab4e5e6.png" style="zoom:50%;" />
+
+推导过程自己需要用笔写下，边界用特殊值代入确定。
+
+------
+
+### 26. 树的子结构
+
+输入两棵二叉树A和B，判断B是不是A的子结构。(约定空树不是任意一个树的子结构)
+
+B是A的子结构， 即 A中有出现和B相同的结构和节点值。
+
+示例 1：
+
+输入：A = [1,2,3], B = [3,1]
+输出：false
+
+示例 2：
+
+输入：A = [3,4,5,1,2], B = [4,1]
+输出：true
+
+> 解法一: 遍历A上每个点出发的结构是否满足B
+>
+> 时间复杂度: O(N*M)    N - A的节点数量   M - B的节点数量
+>
+> 空间复杂度 O(N)
+
+```java
+// 递归调用判断A某点出发与B是否相同时，如果进入函数后B==null，返回true，接下来A==null，返回false
+    boolean checkIfSame(TreeNode A,TreeNode B){
+        // B==null时，已经没有得比较了，返回true
+        if(B==null) return true;
+        // B不为null A却为Null, 返回false
+        if(A==null) return false;
+        return A.val==B.val
+                &&checkIfSame(A.left,B.left)
+                &&checkIfSame(A.right,B.right);
+    }
+```
+
+### 27. 二叉树的镜像
+
+请完成一个函数，输入一个二叉树，该函数输出它的镜像。
+
+**示例 1：**
+
+```
+输入：root = [4,2,7,1,3,6,9]
+输出：[4,7,2,9,6,3,1]
+```
+
+> 解法一： 递归左右对换
+>
+> 时间复杂度：O(N)
+
+递归调用左右对换
+
+### 32-I.从上到下打印二叉树(BFS)
+
+从上到下打印出二叉树的每个节点，同一层的节点按照从左到右的顺序打印。
+
+>解法一：队列实现BFS
+>
+>时间复杂度: O(N)
+>
+>空间复杂度: O(N)
+
+### 32-II.从上到下打印二叉树(BFS)
+
+从上到下按层打印二叉树，同一层的节点按从左到右的顺序打印，每一层打印到一行。
+
+>解法一：队列实现BFS
+>
+>时间复杂度: O(N)
+>
+>空间复杂度: O(N)
+
+在上次的基础上，增加一个Queue, 来回切换

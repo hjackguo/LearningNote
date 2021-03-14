@@ -1,3 +1,15 @@
+### int范围
+
+int占4B，32个bit.
+
+-2^31< int < 2^31-1
+
+int 的最大数 01111....1111 = 2^31-1, 第一位0表示正
+
+int 的最小数 10000...0000 = -2^31, 第一位1表示负还有数字
+
+
+
 ### String, StringBuffer, StringBuilder区别
 
 **String**

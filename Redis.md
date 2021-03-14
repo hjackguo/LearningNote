@@ -223,7 +223,7 @@ public class BloomFilter {
     // 通过不同i去扰乱最终key的hash值
     private int hash(Object key, int i){
         int h;
-        return  key==null?0:(i*(DEFAULT_SIZE-1)&((h=key.hashCode()))^(h>>>16));
+        return  key==null?0:((DEFAULT_SIZE-1)&((h=key.hashCode()*i))^(h>>>16));
     }
 
     public static void main(String[] args) {
@@ -266,4 +266,37 @@ public class BloomFilter {
 - 返回为**false**时，**key一定不存在**
 
   多个hash值进行短路与操作，其中一个为false,就能说明key不存在。
+
+------
+
+## BitSet
+
+Java中，面向程序员操作的最小数据粒度是byte，BitSet提供了bit方法。
+
+> 使用
+
+原理，BitSet底层是long数组，long范围是2^63-1，所以**1个long能表示64个bit位(2^6)**.
+
+```java
+BitSet bitSet = new BitSet(1024);
+bitSet.set(1023);
+System.out.println(bitSet.toLongArray().length); // (1023+1)/64 = 16
+// 此时1024>最大idx1023,会自动扩容
+bitSet.set(1024);
+System.out.println(bitSet.toLongArray().length); // (1024+1)/64 = 17
+```
+
+BitSet支持的**最大空间为Interger.MAX_VALUE**, 也就是 2^31-1个bit。所以，一个**BitSet最大占用内存约为0.25GB**.
+
+> 面试题：如何从2.5亿个数字中判断是否存在某个数字？
+
+2.5亿约等于2^28, 如果采用布隆过滤器，判断一个数字假如生成8个不同hash值映射到BitSet上，一共要2^31个bit, 刚好约等于一个BitSet大小。但此时，BitSet不碰撞情况下0到2^31-1的bit位全是true. 碰撞率100%。
+
+解决方法，构建16个BitSet, 通过idx = num & 1111 判断进来的数字映射到哪个BitSet,同时get方法时也通过index去对应的BitSet判断。此方法能实现低误判率。
+
+注意： 16个BitSet占用0.25GB * 16 = 4GB, 要在JVM设置内存大小大于4GB，不然出现OOM
+
+```java
+-Xms5g -Xmx5g
+```
 

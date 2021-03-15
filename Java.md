@@ -374,6 +374,12 @@ Math.abs(左子树深度 - 右子树深度)<=1
 2. 左旋
 3. 右旋
 
+> 自旋次数的时间复杂度
+
+O(C) 常数级
+
+
+
 
 
 ### Java的反射机制
@@ -414,8 +420,6 @@ import java.lang.reflect.Method; 				// 方法
 > 疑问2：反射机制与面向对象中的封装性是不是矛盾的？如何看待两个技术？
 
  不矛盾。
-
-#### 
 
 > 关于java.lang.Class类的理解
 
@@ -465,4 +469,98 @@ static void getClassObject() throws Exception{
 4. 通过类的加载器加载 
    - 加载系统自带的类的话，如String, 用引导类加载器
    - 加载自定义类的话，用系统类加载器(又称应用类加载器)
+
+
+
+> 哪些类型可以有Class对象？
+
+- class 
+
+  外部类，成员内部类，局部内部类，匿名内部类
+
+- interface  接口
+- [] 数组
+- enum 枚举
+- annotation  注解 @interface
+- primitive type 基本数据类型
+- void
+
+```java
+    public static void main(String[] args) throws Exception{
+        Class c1 = Object.class;
+        Class c2 = Comparable.class;
+        Class c3 = String[].class;
+        Class c4 = int[][].class;
+        Class c5 = ElementType.class;
+        Class c6 = Override.class;
+        Class c7 = int.class;
+        Class c8 = void.class;
+        Class c9 = Class.class;
+        
+        int [] a = new int[10];
+        int [] b = new int[100];
+        // 数组元素类型一样  维度都是1  属于同一个Class
+        System.out.println(a.getClass()==b.getClass());  //true
+    }
+```
+
+> 类的加载过程
+
+1. 类的加载(Load)
+
+   将类的class文件读入内存，并为之创建一个java.lang.Class对象。此过程由类加载器完成。
+
+2. 类的链接(Link)
+
+   将类的二进制数据合并到JRE中。会**给类变量(static)默认设置默认值**(如果int类型，默认值0)
+
+3. 类的初始化(Initialize)
+
+   JVM负责对类进行初始化。 执行**类构造器<clinit>()**方法。类变量赋值(如果声明了static a =5 ,本处才会赋值5，链接过程只会赋值0)
+
+> 创建运行时类的对象
+
+```java
+    public static void main(String[] args) throws Exception{
+        Class<Person> clazz = Person.class;
+        /**
+         newInstance(): 调用此方法创建对应运行时对象
+
+         要想调用此方法创建运行时类对象，要求：
+         1. 运行时类要提供空参构造器
+         2. 构造器方法不可以是private的
+         */
+
+        // newInstance内部调用运行时类空参构造器
+        Person obj = clazz.newInstance();
+        System.out.println(obj);
+    }
+```
+
+> 反射的动态性
+
+```java
+// 每次的生成对象都不同    
+void test() throws Exception{
+        int num = new Random().nextInt(3); // 0 1 2
+        String classPath = "";
+        switch (num){
+            case 0:
+                classPath = "java.util.Date";
+                break;
+            case 1:
+                classPath = "java.lang.Object";
+                break;
+            case 2:
+                classPath = "com.company.entity.Person";
+                break;
+        }
+        Object obj = getInstance(classPath);
+        System.out.println(obj);
+    }
+    Object getInstance(String classPath) throws Exception{
+        Class clazz = Class.forName(classPath);
+        return clazz.newInstance();
+}
+```
 

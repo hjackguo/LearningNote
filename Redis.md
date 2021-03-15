@@ -299,4 +299,3 @@ BitSet支持的**最大空间为Interger.MAX_VALUE**, 也就是 2^31-1个bit。�
 ```java
 -Xms5g -Xmx5g
 ```
-

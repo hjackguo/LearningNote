@@ -338,7 +338,7 @@ B是A的子结构， 即 A中有出现和B相同的结构和节点值。
 
 递归调用左右对换
 
-### 32-I.从上到下打印二叉树(BFS)
+### 32-I.从上到下打印二叉树
 
 从上到下打印出二叉树的每个节点，同一层的节点按照从左到右的顺序打印。
 
@@ -348,7 +348,7 @@ B是A的子结构， 即 A中有出现和B相同的结构和节点值。
 >
 >空间复杂度: O(N)
 
-### 32-II.从上到下打印二叉树(BFS)
+### 32-II.从上到下打印二叉树
 
 从上到下按层打印二叉树，同一层的节点按从左到右的顺序打印，每一层打印到一行。
 
@@ -358,4 +358,122 @@ B是A的子结构， 即 A中有出现和B相同的结构和节点值。
 >
 >空间复杂度: O(N)
 
-在上次的基础上，增加一个Queue, 来回切换
+在上次的基础上，增加一个childQueue, 来回切换。 记得添加到最终list时，要调用clone()方法
+
+### 32-III.从上到下打印二叉树
+
+请实现一个函数按照之字形顺序打印二叉树，即第一行按照从左到右的顺序打印，第二层按照从右到左的顺序打印，第三行再按照从左到右的顺序打印，其他行以此类推。
+
+> 解法一：队列实现BFS
+>
+> 时间复杂度: O(N)
+>
+> 空间复杂度: O(N)
+
+在上次的基础上，增加一个childQueue, 来回切换。 记得添加到最终list时，要调用clone()方法。维护一个方向信号量。调用Collections.reverse()方法。
+
+### 37.序列化二叉树(*)
+
+请实现两个函数，分别用来序列化和反序列化二叉树
+
+> deserialize
+
+1. 用Queue实现层次访问
+2. 维护一个指针，用来指向下一个Queue中的字节点
+
+建议，在纸上自己推导: 5, 2, 3, null, null, 2, 4, 3, 1
+
+### 54.二叉搜索树的第K大节点
+
+给定一棵二叉搜索树，请找出其中第k大的节点。
+
+> 思路
+
+按**右 -> 中 -> 左**顺序搜索
+
+### 55-I.二叉树的深度
+
+输入一棵二叉树的根节点，求该树的深度。从根节点到叶节点依次经过的节点（含根、叶节点）形成树的一条路径，最长路径的长度为树的深度。
+
+```java
+    public int maxDepth(TreeNode root) {
+        if(root==null) return 0;
+        return Math.max(maxDepth(root.left),maxDepth(root.right))+1;
+    }
+```
+
+### 55-II.平衡二叉树
+
+输入一棵二叉树的根节点，判断该树是不是平衡二叉树。如果某二叉树中任意节点的左右子树的深度相差不超过1，那么它就是一棵平衡二叉树。
+
+> 思路
+
+判断左右树深差
+
+```java
+    int depth(TreeNode root){
+        if (!balanced||root==null) return 0;
+        int leftD = depth(root.left);
+        int rightD = depth(root.right);
+        if(Math.abs(leftD-rightD)>1) balanced = false;
+        return Math.max(leftD,rightD)+1;
+    }
+```
+
+### 68-I.二叉搜索树的最近公共祖先(*)
+
+给定一个二叉搜索树, 找到该树中两个指定节点的最近公共祖先。
+
+百度百科中最近公共祖先的定义为：“对于有根树 T 的两个结点 p、q，最近公共祖先表示为一个结点 x，满足 x 是 p、q 的祖先且 x 的深度尽可能大（一个节点也可以是它自己的祖先）。”
+
+> 思路
+
+```java
+public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        if(p.val<root.val&&q.val<root.val) return lowestCommonAncestor(root.left,p,q);
+        if(p.val>root.val&&q.val>root.val) return lowestCommonAncestor(root.right,p,q);
+        return root;
+}
+```
+
+1. 如果两个点都大于当前点，递归去当前点右子树搜
+2. 如果两个点都小于当前点，递归去当前点左子树搜
+3. 前两种都不成立，就说明一定是当前点
+
+> 注意
+
+本题会做，但能否这么简便？ 注意多做几次。
+
+### 68-II.二叉树的最近公共祖先(*)
+
+给定一个二叉树, 找到该树中两个指定节点的最近公共祖先。
+
+百度百科中最近公共祖先的定义为：“对于有根树 T 的两个结点 p、q，最近公共祖先表示为一个结点 x，满足 x 是 p、q 的祖先且 x 的深度尽可能大（一个节点也可以是它自己的祖先）。
+
+> 思路
+
+递归本身，拿到左和右的情况，如果左为空，如果都在右；如果右为空，说明都在左。如果都不为空，说明就是本身。
+
+```java
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        if(root==null||root==p||root==q)return root;
+        TreeNode left = lowestCommonAncestor(root.left,p,q);
+        TreeNode right = lowestCommonAncestor(root.right,p,q);
+        if(left==null) return right;
+        if(right==null) return left;
+        return root;
+    }
+```
+
+> 注意
+
+本题会写，但能否想出这种最简洁的思路。
+
+### 34.二叉树中和为某一值的路径(补充题)
+
+输入一棵二叉树和一个整数，打印出二叉树中节点值的和为输入整数的所有路径。从树的根节点开始往下一直到叶节点所经过的节点形成一条路径。
+
+> 回溯法
+
+本题加了后出来时要减去，同时添加到lists里的list要**新建对象**。
+

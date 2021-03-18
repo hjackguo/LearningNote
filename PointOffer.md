@@ -688,11 +688,232 @@ F(N) = F(N - 1) + F(N - 2), 其中 N > 1.
 
 
 
-### 29.顺时针打印矩阵
+### 29.顺时针打印矩阵(*)
+
+```
+输入：matrix = [[1,2,3],[4,5,6],[7,8,9]]
+输出：[1,2,3,6,9,8,7,4,5]
+```
+
+> 解法一：四指针
+>
+> 时间复杂度：O(N)
+>
+> 空间复杂度：O(1)
+
+用l,t,r,b表示四个边界，巧妙简单输出。
+
+会做，当能否这么简便完成？
+
+```java
+    public int[] spiralOrder(int[][] matrix) {
+        if(matrix.length==0) return new int[0];
+        int l = 0,r=matrix[0].length-1,t=0,b=matrix.length-1;
+        int x = 0;
+        int[] result = new int[(r+1)*(b+1)];
+        while (true){
+            for(int i=l;i<=r;i++) result[x++] = matrix[t][i]; // left to right 
+            if(++t>b) break; //思考本次为什么是>不是>=
+            for(int i=t;i<=b;i++) result[x++] = matrix[i][r]; // top to bottom
+            if(--r<l) break;
+            for(int i=r;i>=l;i--) result[x++] = matrix[b][i]; // right to left
+            if(--b<t) break;
+            for(int i=b;i>=t;i--) result[x++] = matrix[i][l]; // bottom to top
+            if(++l>r) break;
+        }
+        return result;
+    }
+```
+
+
 
 ### 53-I.在排序数组中查找数字I
 
-### 53-II.0～n-1中的缺失数字
+统计一个数字在排序数组中出现的次数。
+
+```
+输入: nums = [5,7,7,8,8,10], target = 8
+输出: 2
+```
+
+> 解法一：二分查找
+>
+> 时间复杂度：O(log(N))
+>
+> 空间复杂度: O(1)
+
+
+
+### 53-II.0～n-1中的缺失数字(*)
+
+一个长度为n-1的递增排序数组中的所有数字都是唯一的，并且每个数字都在范围0～n-1之内。在范围0～n-1内的n个数字中有且只有一个数字不在该数组中，请找出这个数字。
+
+```
+输入: [0,1,2,3,4,5,6,7,9]
+输出: 8
+```
+
+> 解法一：二分筛选
+>
+> 时间复杂度: O(log(N))
+>
+> 空间复杂度:O (1)
+
+1. 判断mid-1是否正常，如果不正常，right = mid-1
+2. 判断mid是否正常，如果不正常 return mid;
+3. 此时右边肯定不正常，left = mid+1
+4. 如果前面都没有返回，数组正常。返回nums.length.
+
+## 哈希表
+
+### 48.最长不含重复字符的子字符串
+
+请从字符串中找出一个最长的不包含重复字符的子字符串，计算该最长子字符串的长度。
+
+```
+输入: "abcabcbb"
+输出: 3 
+```
+
+> 解法一：滑动窗口
+>
+> 时间复杂度：O(N)
+>
+> 空间复杂度：O(1). ch 范围0-127  O(127) = O(1)
+
+前后指针+Map，前指针先走,遇到情况更新后指针
+
+### 50.第一个只出现一次的字符
+
+在字符串 s 中找出第一个只出现一次的字符。如果没有，返回一个单空格。 s 只包含小写字母。
+
+```
+s = "abaccdeff"
+返回 "b"
+```
+
+> 解法一：map<Character,Boolean>
+>
+> 时间复杂度: O(N)
+>
+> 空间复杂度: O(1). ch范围0-127， O(127) = O(1)
+
+本处用map<Character,Boolean>而不用map<Character,Integer>原因是Boolean比Integer省内存。
+
+## 链表
+
+### 06.从头到尾打印链表
+
+输入一个链表的头节点，从尾到头反过来返回每个节点的值（用数组返回）。
+
+> 解法一：两次遍历
+>
+> 时间复杂度:O(N)
+>
+> 空间复杂度:O(1)
+
+
+
+>解法二：辅助栈法
+>
+>时间复杂度 ：O(N)
+>
+>空间复杂度：O(N) 额外栈空间
+
+
+
+### 18.删除链表的节点
+
+> 解法一： 前后指针
+>
+> 时间复杂度: O(N)
+>
+> 空间复杂度: O(1)
+
+排除head是要删除的情况后。p_ahead和p_behind表示前后指针遍历。
+
+
+
+### 22.链表中倒数的第k个节点
+
+> 解法一：前后指针
+>
+> 时间复杂度：O(N)
+>
+> 空间复杂度 O(1)
+
+前指针先走K次
+
+
+
+### 23.反转链表
+
+> 解法一：前后标记
+
+```java
+    public ListNode reverseList(ListNode head) {
+        ListNode pre = null;
+        ListNode next ;
+        while (head!=null){
+            next = head.next;
+            head.next = pre;
+            pre = head;
+            head = next;
+        }
+        return pre;
+    }
+```
+
+
+
+### 35.复杂链表的复制(*)
+
+请实现 copyRandomList 函数，复制一个复杂链表。在复杂链表中，每个节点除了有一个 next 指针指向下一个节点，还有一个 random 指针指向链表中的任意节点或者 null。
+
+![链表](https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2020/01/09/e1.png)
+
+输入：head = [[7,null],[13,0],[11,4],[10,2],[1,0]]
+输出：[[7,null],[13,0],[11,4],[10,2],[1,0]]
+
+> 解法一：哈希表
+
+Map<Node,Node>结构，用老的节点映射新的节点
+
+```java
+   public Node copyRandomList(Node head) {
+        if(head==null) return null;
+        Map<Node,Node> map = new HashMap<>();
+        Node p = head;
+        while (p!=null){
+            Node newNode = new Node(p.val);
+            map.put(p,newNode);
+            p = p.next;
+        }
+        p = head;
+        while (p!=null){
+            map.get(p).next = map.get(p.next);
+            map.get(p).random = map.get(p.random);
+            p=p.next;
+        }
+        return map.get(head);
+    }
+```
+
+
+
+### 52.两个链表的第一个公共节点
+
+输入两个链表，找出它们的第一个公共节点。
+
+> 方法一： 共同长度
+>
+> 时间复杂度：O(n+m)
+>
+> 空间复杂度: O(1)
+
+A跑完跑B，B跑完跑A, 一定会某个值相等或同时为null.
+
+
 
 ## 动态规划(提前)
 
@@ -704,7 +925,7 @@ F(N) = F(N - 1) + F(N - 2), 其中 N > 1.
 >
 > 时间复杂度 O(N^2)
 >
-> 空间复杂度O(N)
+> 空间复杂度O(N)  
 
 dp数组起点dp[2]=1,双重循环遍历所有情况。
 

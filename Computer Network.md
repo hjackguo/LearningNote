@@ -4,6 +4,8 @@
 
 <img src="http://ww1.sinaimg.cn/large/008aPpVGgy1gnuk4lcc01j312u0kkb24.jpg" alt="WeChatcc1a003c1f1c350d0b483dd82d45c633.png" style="zoom:50%;" />
 
+![WeChatae5f291947fddb9e425f21126587f162.png](http://ww1.sinaimg.cn/large/008aPpVGgy1gorbz8qmzpj30yo0ngkia.jpg)
+
 
 
 ### 应用层
@@ -123,6 +125,21 @@
   Server确认了：自己接收、发送正常，对方接收、发送正常
 
 所以三次握手就能确认双方收发过程是否都正常，缺一不可。
+
+|        |                | 1握手 | 2握手 | 3握手 |
+| ------ | -------------- | ----- | ----- | ----- |
+| 发送方 | 自己发送正常   |       | T     |       |
+|        | 自己接收正常   |       | T     |       |
+|        | 接收方发送正常 |       | T     |       |
+|        | 接收方接收正常 |       | T     |       |
+| 接收方 | 自己发送正常   |       |       | T     |
+|        | 自己接收正常   | T     |       |       |
+|        | 发送方发送正常 | T     |       |       |
+|        | 发送方接收正常 |       |       | T     |
+
+
+
+
 
 
 
@@ -513,4 +530,102 @@ www.tmall.com对应的真正域名为www.tmall.com. 。末尾的.称为根域名
 以此类推，重复后便可以找到目标DNS服务器。
 
 
+
+## 常见面试题
+
+### 为什么需要三次握手？不能两次？
+
+|        |                | 1握手 | 2握手 | 3握手 |
+| ------ | -------------- | ----- | ----- | ----- |
+| 发送方 | 自己发送正常   |       | T     |       |
+|        | 自己接收正常   |       | T     |       |
+|        | 接收方发送正常 |       | T     |       |
+|        | 接收方接收正常 |       | T     |       |
+| 接收方 | 自己发送正常   |       |       | T     |
+|        | 自己接收正常   | T     |       |       |
+|        | 发送方发送正常 | T     |       |       |
+|        | 发送方接收正常 |       |       | T     |
+
+
+
+### session和cookie
+
+![WeChatb5ff7bd0bb1af1ee3b4131b7ec345a63.png](http://ww1.sinaimg.cn/large/008aPpVGgy1gopmu90xnjj323o18wu0x.jpg)
+
+简单来说，cookie记录了用户是谁，session记录了用户做了什么。
+
+> session
+
+由于HTTP协议是无状态的协议，所以服务器端需要记录用户的状态时，就需要用某种机制来跟踪用户，这个机制就是Session。服务器端保存session的方法有很多，内存、数据库、文件都有。集群的时候要考虑Session的迁移。
+
+> cookie
+
+用cookie标识特定用户。每次HTTP请求的时候，客户端都会发送相应的Cookie信息到服务器。大多数应用都是通过Cookie来实现Session跟踪的。第一次创建Session的时候，服务器会在HTTP协议中告诉客户端，需要在Cookie里面记录一个Session ID，以后每次请求把这个ID发给服务器，就知道你谁了。
+
+> 总结
+
+Session是在服务端保存的一个数据结构，用来跟踪用户的状态，session可以保存在内存、集群、数据库、文件中。
+
+Cookie是客户端保存用户信息的一种机制，用来记录用户的信息。
+
+> Cookie和Session的区别
+
+- 安全性：Session比Cookie安全，Session是存储在服务器端的，Cookie是存储在客户端的。
+- 存储值的类型不同：Cookie只支持字符串数据，想要设置其它类型的数据，需要将其转换成字符串，Session可以存任何数据类型。
+- 有效期不同：Cookie可设置为长时间保持，比如我们经常使用的默认登陆功能，Session一般失效时间较短，客户端关闭(默认情况下)或者Session超时都会失效。
+- 存储大小不同：单个Cookie保存的数据不能超过4K，Session可存储数据远高于Cookie，但是当访问量过多，会占用服务器资源。
+
+### Token
+
+> session认证流程
+
+- 用户第一次请求服务器的时候，服务器根据用户提交的相关信息，创建对应的Session。
+- 请求返回时将此Session的唯一标识信息SessionID返回给浏览器
+- 浏览器接收到服务器返回的SessionID信息后，会将此信息存入到Cookie中，同时Cookie记录此SessionID属于哪个域名。
+- 当用户第二次访问服务器的时候，请求会自动判断此域名下是否存在Cookie信息，如果存在自动将Cookie信息也发送给服务端，服务端会从Cookie中获取SessionID,再根据SessionID查找相应的Session信息，如果没有找到说明用户没有登陆或者登陆失效，如果找到Session证明用户已经登陆可执行后面操作。
+
+从上面流程可知，**SessionID是连接Cookie和Session的一道桥梁**，大部分系统也是根据此原理来验证用户登陆状态。
+
+>  Token介绍
+
+Token可分为Access Token和Refresh Token
+
+- 访问资源接口(API)时所需要的资源凭证
+- 简单token的组成：uid(用户唯一的身份标识)、time(当前时间的时间戳)、sign(签名，token的前几位以哈希算法压缩成一定长度的十六进制字符串)
+- 特点
+  - 服务端无状态化、可扩展性好
+  - 支持移动端设备
+  - 安全
+  - 支持跨程序调用
+
+> Access Token身份验证流程
+
+![WeChatf1e2a52785e01b90905ed6a7d517d14e.png](http://ww1.sinaimg.cn/large/008aPpVGgy1gopnxiaxpaj31zo0vgqv5.jpg)
+
+1. 客户端使用用户名跟密码请求登陆。
+2. 服务端接收到请求，去验证用户名与密码
+3. 验证成功后，服务端会签发一个token并把这个token发送给客户端
+4. 客户端接收到token以后，会把它存储起来，比如放在cookie或者localStorage里
+5. 客户端每次向服务端请求资源的时候需要带着服务端签发的token
+6. 服务端收到请求，然后去验证客户端请求里面带着的token，如果验证成功，就向客户端返回请求的数据。
+
+
+
+- 每一次请求都需要携带token，需要把token放到HTTP的Header里
+- 基于token的用户认证是一种服务端无状态的认证方式，服务端不用存放token数据。**用解析token的计算时间换取session的存储空间，从而减轻服务器的压力**。
+
+> Refresh Token
+
+refresh token是专门用于刷新access token的token。如果没有access token,也可以刷新access token,但每次刷新都要用户输入登录用户名与密码，会很麻烦。有了refresh token，可以减少这个麻烦，客户端直接用refresh token去更新access token，无需用户进行额外操作。
+
+![WeChat7e8bdab491387dc2bdfcc024e2ff654c.png](http://ww1.sinaimg.cn/large/008aPpVGgy1gopoh3k3xkj31w81ccx6q.jpg)
+
+- Access Token的有效期比较短，当Access Token由于过期失效时，使用Refresh Token就可以获取到新的Token，如果Refresh Token也失效了，用户就只能重新登录了。
+- Refresh Token及过期时间是存储在服务器的数据库中，只有在申请新的Access Token时才会验证，不会对业务接口响应时间造成影响，也不需要像Session一样一直保存在内存中以应对大量的请求。
+
+### Session和Token的区别
+
+- Session是一种**记录服务器和客户端会话状态的机制，使服务端有状态化，可以记录会话信息**。而Token是**令牌，访问API时所需要的资源凭证。Token使服务端无状态化，不会存储会话信息**。
+- Session和Token并不矛盾，作为身份认证Token安全性比Session好，因为每一个请求都有**签名**还能防止监听和重访攻击，而**Session就必须依赖链路层来保障通讯安全**。如果**需要实现有状态会话，仍然可以增加Session来在服务器端保存一些状态**。
+- Session认证只是简单的把User信息存储到Session里，因为SessionID的不可预测性，暂且认为是安全的。而token，如果指的是OAuth Token或类似的机制的话，提供的是认证和授权，认证是针对用户，授权是针对APP。其目的是让某APP有权利访问某用户的信息。这里的Token是唯一的，不可以转移到其它App上，也不可以转移到其它用户上。Session只提供一种简单的认证，即只要有此SessionID，即认为有此User的全部权利。是需要严格保密的，这个数据应该只保存在站方，不应该共享给其它网站或者第三方App。简单来说：**如果你的用户数据可能需要和第三方共享，或者允许第三方调用API接口，用Token。如果永远只是自己的网站，自己的App，用什么都无所谓**。
 

@@ -31,6 +31,20 @@
 2. pop 时，如果stack的pop值等于minStack的peek，那么minStack也进行pop操作
 3. 返回minStack的peek就是最小值。
 
+
+
+### 31.栈的压入、弹出序列
+
+输入两个整数序列，第一个序列表示栈的压入顺序，请判断第二个序列是否为该栈的弹出顺序。假设压入栈的所有数字均不相等。例如，序列 {1,2,3,4,5} 是某栈的压栈序列，序列 {4,5,3,2,1} 是该压栈序列对应的一个弹出序列，但 {4,3,5,1,2} 就不可能是该压栈序列的弹出序列。
+
+> 解法一：辅助栈
+>
+> 时间复杂度：O(N)
+>
+> 空间复杂度: O(N)
+
+借助辅助栈模拟，用一个指针指向pop数组
+
 ------
 
 
@@ -338,6 +352,26 @@ B是A的子结构， 即 A中有出现和B相同的结构和节点值。
 
 递归调用左右对换
 
+### 28.对称的二叉树(*)
+
+请实现一个函数，用来判断一棵二叉树是不是对称的。如果一棵二叉树和它的镜像一样，那么它是对称的。
+
+> 解法一
+
+```java
+   public boolean isSymmetric(TreeNode root) {
+        if(root==null) return true;
+        return helper(root.left,root.right);
+    }
+    boolean helper(TreeNode leftTree,TreeNode rightTree){
+        if(leftTree==null&&rightTree==null) return true;
+        if(leftTree==null||rightTree==null||leftTree.val!=rightTree.val) return false;
+        return helper(leftTree.left,rightTree.right)&&helper(leftTree.right,rightTree.left);
+    }
+```
+
+比较三部分，左 右  本身值
+
 ### 32-I.从上到下打印二叉树
 
 从上到下打印出二叉树的每个节点，同一层的节点按照从左到右的顺序打印。
@@ -371,6 +405,34 @@ B是A的子结构， 即 A中有出现和B相同的结构和节点值。
 > 空间复杂度: O(N)
 
 在上次的基础上，增加一个childQueue, 来回切换。 记得添加到最终list时，要调用clone()方法。维护一个方向信号量。调用Collections.reverse()方法。
+
+### 33.二叉搜索树的后续遍历序列(*)
+
+输入一个整数数组，判断该数组是不是某二叉搜索树的后序遍历结果。如果是则返回 `true`，否则返回 `false`。假设输入的数组的任意两个数字都互不相同。
+
+```
+输入: [1,6,3,2,5]
+输出: false
+```
+
+> 解法一： 双while递归法
+>
+> 时间复杂度: O(N^2)
+
+```java
+    boolean check(int[] postorder,int start,int end){
+        if(start>=end) return true;
+        int p=start;
+        while (postorder[p]<postorder[end]&&p<end)p++;
+        int leftEnd = p-1;
+        while (postorder[p]>postorder[end]&&p<end)p++;
+        return p==end
+                &&check(postorder,start,leftEnd)
+                &&check(postorder,leftEnd+1,end-1);
+    }
+```
+
+注意用while代码比较简洁。
 
 ### 37.序列化二叉树(*)
 
@@ -494,6 +556,37 @@ public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
 > 时间复杂度：两个FOR循环，里面还嵌套搜索
 
 两个for循环计算从每个点开始的可能性。直接对四个方向搜，然后再去判断越界。用'.'符号标记已经被走过的路，记得结束的时候复位。
+
+### 13. 机器人的运动范围
+
+地上有一个m行n列的方格，从坐标 [0,0] 到坐标 [m-1,n-1] 。一个机器人从坐标 [0, 0] 的格子开始移动，它每次可以向左、右、上、下移动一格（不能移动到方格外），也不能进入行坐标和列坐标的数位之和大于k的格子。例如，当k为18时，机器人能够进入方格 [35, 37] ，因为3+5+3+7=18。但它不能进入方格 [35, 38]，因为3+5+3+8=19。请问该机器人能够到达多少个格子？
+
+> 解法一： DFS
+>
+> 时间复杂度：O(MN)
+>
+> 空间复杂度: O(MN)
+
+核心代码
+
+```java
+    void dfs(int i,int j){
+        if(i<0||j<0||i>=m||j>=n) return;
+        if(sumOfAllBit(i)+sumOfAllBit(j)>k) return;
+      	// 已经标记了的跳过
+        if(matrix[i][j]) return;
+        matrix[i][j] = true;
+        count++;
+        dfs(i-1,j);
+        dfs(i+1,j);
+        dfs(i,j-1);
+        dfs(i,j+1);
+    }
+```
+
+> 解法二：BFS
+
+借助队列实现
 
 ## 递归
 
@@ -686,6 +779,26 @@ F(N) = F(N - 1) + F(N - 2), 其中 N > 1.
 
 
 
+### 21.调整数组奇前偶后
+
+输入一个整数数组，实现一个函数来调整该数组中数字的顺序，使得所有奇数位于数组的前半部分，所有偶数位于数组的后半部分。
+
+> 解法一： 双指针
+>
+> 时间复杂度：O(N)
+>
+> 空间复杂度: O(1)
+
+右边指针用来锁定奇数
+
+左边指针用来锁定偶数
+
+进行换位
+
+左等于右时结束
+
+判断奇偶的话，%2和&1都可以
+
 
 
 ### 29.顺时针打印矩阵(*)
@@ -724,6 +837,29 @@ F(N) = F(N - 1) + F(N - 2), 其中 N > 1.
         return result;
     }
 ```
+
+### 51.数组中的逆序对(*)
+
+在数组中的两个数字，如果前面一个数字大于后面的数字，则这两个数字组成一个逆序对。输入一个数组，求出这个数组中的逆序对的总数。
+
+```
+输入: [7,5,6,4]
+输出: 5
+```
+
+> 解法一：暴力算法
+>
+> 时间复杂度: O(N^2)
+>
+> 空间复杂度: O(1)
+
+> 解法二：归并计数
+>
+> 时间复杂度: O(N*log N)
+>
+> 空间复杂度: O(N)
+
+![WeChatcabdce6c1991d80b2d0796d7fcb38c91.png](http://ww1.sinaimg.cn/large/008aPpVGgy1goxqp5jicrj316c0v4dpj.jpg)
 
 
 
@@ -846,7 +982,7 @@ s = "abaccdeff"
 
 
 
-### 23.反转链表
+### 24.反转链表
 
 > 解法一：前后标记
 
@@ -1044,6 +1180,31 @@ int f(int n){
 
 ## 字符串
 
+### 05.替换空格
+
+```
+输入：s = "We are happy."
+输出："We%20are%20happy."
+```
+
+> 解法一： StringBuilder
+
+用String Builder操作，比String.replaceAll快
+
+### 46.把数字翻译成字符串(*)
+
+给定一个数字，我们按照如下规则把它翻译为字符串：0 翻译成 “a” ，1 翻译成 “b”，……，11 翻译成 “l”，……，25 翻译成 “z”。一个数字可能有多个翻译。请编程实现一个函数，用来计算一个数字有多少种不同的翻译方法。
+
+> 解法一：动态规划
+>
+> 时间复杂度: O(N)
+>
+> 空间复杂度: O(N)
+
+符合条件时dp[i] = dp[i-1]+dp[i-2];
+
+一共25个英文字母
+
 ### 58-I.翻转单词顺序
 
 输入一个英文句子，翻转句子中单词的顺序，但单词内字符的顺序不变。为简单起见，标点符号和普通字母一样处理。例如输入字符串"I am a student. "，则输出"student. a am I"。
@@ -1092,7 +1253,88 @@ r--;
 
 
 
-## 动态规划(提前)
+## 分治
+
+### 25.合并两个排序的链表
+
+```
+输入：1->2->4, 1->3->4
+输出：1->1->2->3->4->4
+```
+
+> 递归
+>
+> 时间复杂度 O(M+N)
+>
+> 空间复杂度O(1)
+
+```java
+// 核心代码
+public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+    if(l1==null) return l2;
+    if(l2==null) return l1;
+    if(l1.val>l2.val) {
+        l2.next = mergeTwoLists(l1,l2.next);
+        return l2;
+    }else {
+        l1.next = mergeTwoLists(l1.next,l2);
+        return l1;
+    }
+}
+```
+
+
+
+### 36.二叉搜索树与双向链表(*)
+
+输入一棵二叉搜索树，将该二叉搜索树转换成一个排序的循环双向链表。要求不能创建任何新的节点，只能调整树中节点指针的指向。
+
+!['abc'](https://pic.leetcode-cn.com/1599401091-PKIjds-Picture1.png)
+
+
+
+> 解法一：辅助ArrayList
+>
+> 时间复杂度: O(N)
+>
+> 空间复杂度: O(N) 保存引用
+
+ArrayList保存点的引用，在依次遍历后修改左右指针
+
+> 解法二: head,pre记录量
+>
+> 时间复杂度: O(N)
+>
+> 空间复杂度: O(1)
+
+pre为空的时候，让head = cur.
+
+其余时候pre.right = cur
+
+```java
+Node pre;
+Node head;
+public Node treeToDoublyList(Node root) {
+    if(root==null) return null;
+    dfs(root);
+    pre.right = head;
+    head.left = pre;
+    return head;
+}
+void dfs(Node cur){
+    if(cur==null) return;
+    dfs(cur.left);
+    if (pre==null) head = cur;
+    else pre.right = cur;
+    cur.left = pre;
+    pre = cur;
+    dfs(cur.right);
+}
+```
+
+
+
+## 动态规划
 
 ### 14-I.剪绳子(*)
 
@@ -1319,3 +1561,40 @@ else dp[i] = dp[i-1]+nums[i];
 
 保存前面出现的最低价，用当前价减去就行。
 
+## 字符串排序
+
+### 38.字符串的排序
+
+> 解法一：普通递归
+>
+> 时间复杂度：N！
+
+记得用StringBuilder操作，效率快一点
+
+## 其它题型
+
+
+
+
+
+56_I
+
+56_II
+
+57
+
+57_II
+
+60
+
+61
+
+62
+
+64
+
+65
+
+66
+
+67

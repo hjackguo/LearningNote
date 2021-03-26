@@ -96,6 +96,18 @@ public static char[] copyOf(char[] original, int newLength) {
 
 ------
 
+### overload和override
+
+> overload
+
+重载，同一个类中可以有多个名称相同的方法，但这些方法的**参数列表各不相同**。
+
+> override
+
+覆盖，重写。子类中的方法可以与父类中的某个方法的名称和参数完全相同，通过子类创建的实例对象调用这个方法时，将调用子类中的定义方法，相当于**把父类中定义的那个完全相同的方法给覆盖**了，这是面向对象编程**多态性**的一种表现。
+
+
+
 ### Volatile关键字
 
 **volatile的作用**
@@ -380,6 +392,29 @@ O(C) 常数级
 
 
 
+### IO
+
+#### 流的分类
+
+- 按照操作数据单位不同分为：字节流(8 bit)，字符流(16 bit)
+- 按照流向不同：输入流，输出流
+- 按照角色不同：节点流，处理流
+
+| 抽象基类 | 字节流       | 字符流 |
+| -------- | ------------ | ------ |
+| 输入流   | InputStream  | Reader |
+| 输出流   | OutputStream | Writer |
+
+字符流适合文本文件，一个char等于16 bit
+
+字节流适合非文本文件，如图片、视频等
+
+![WeChatb3b48e76b58e7b571855314b674c3868.png](http://ww1.sinaimg.cn/large/008aPpVGgy1gorbm2mb0bj31as0lsasi.jpg)
+
+
+
+
+
 
 
 ### Java的反射机制
@@ -392,6 +427,7 @@ Reflection被视为动态语言的关键。 类加载完后，Java方法区就�
 
 ```java
 // 反射习惯类
+import java.lang.Class; 								// 反射的源头
 import java.lang.reflect.Constructor;   // 类的构造器
 import java.lang.reflect.Field;         // 属性
 import java.lang.reflect.Method; 				// 方法
@@ -463,7 +499,7 @@ static void getClassObject() throws Exception{
 }
 ```
 
-1. 调运运行时类的属性 .class
+1. 调用运行时类的属性 .class
 2. 调用运行时类的对象，调用getClass()
 3. 调用Class的静态方法： forName(String classPath)
 4. 通过类的加载器加载 
@@ -563,4 +599,6 @@ void test() throws Exception{
         return clazz.newInstance();
 }
 ```
+
+### 动态代理
 

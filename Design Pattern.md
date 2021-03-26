@@ -286,3 +286,97 @@ public class SimpleFactory {
 
 定义了一个**interface**, 将工厂抽象成两层，一层是**AbsFactory(抽象工厂)和具体的工厂子类**。
 
+------
+
+
+
+## 代理模式
+
+- 为一个对象提供一个替身，以控制对这个对象的访问。好处是可以在目标对象实现的基础上，增加额外的功能操作，即扩展目标对象的功能。
+- 被代理的对象可以是远程对象、创建开销大的对象或需要安全控制的对象。
+- 代理模式主要有三种
+  1. 静态代理
+  2. 动态代理 (JDK代理、接口代理)
+  3. Cglib代理 (可以在内存中动态地创建对象，而不需要实现接口，属于动态代理的范畴)
+
+### 静态代理
+
+静态代理在使用时，需要定义接口或者父类，**被代理对象与代理对象一起实现相同的接口或者是继承相同父类**。
+
+![WeChatdb7ed24017503a834e5f5bc7c7137756.png](http://ww1.sinaimg.cn/large/008aPpVGgy1goqmd113nbj30yk0ts1gf.jpg)
+
+> 优点
+
+在**不修改目标对象**的功能前提下，能通过代理对象**对目标功能扩展**
+
+> 缺点
+
+因为代理对象需要与目标对象实现一样的接口，所以会**有很多代理类**。
+
+一旦接口增加方法，**目标对象与代理对象都要维护**。
+
+### 动态代理
+
+![WeChat629d63e2c7c221d65ef75c73fb7b63d3.png](http://ww1.sinaimg.cn/large/008aPpVGgy1goqkulwpihj31fc0zcnpd.jpg)
+
+- 代理对象，不需要实现接口，但是目标对象要实现接口，否则不能动态代理。
+- 代理对象的生成，是利用JDK的API，动态的在内存中构建代理对象
+- 动态代理也叫JDK代理、接口代理
+
+
+
+JDK中生成代理对象的API
+
+1. 代理类所在的包: java.lang.reflect.Proxy
+2. JDK实现代理只需要使用newProxyInstance方法，但是该方法需要接收三个参数，完整写法：
+
+```java
+static Object newProxyInstance(ClassLoader loader, Class<?>[] interfaces,InvocationHandler h)
+```
+
+
+
+### Cglib代理
+
+![WeChat78eeed47298cff62ec612475ee57ca25.png](http://ww1.sinaimg.cn/large/008aPpVGgy1goqkwe8e4uj31cg0uohdt.jpg)
+
+- 静态代理和JDK代理模式都要求目标对象是实现一个接口，但是有时候目标对象只是一个单独的对象，并没有实现任何的接口，这个时候可**使用目标对象子类来实现代理-这就是Cglib代理**。被Cglib代理的类不能是final，因为final类不能被继承。
+- Cglib代理也叫作子类代理，它是在内存中构建一个子类对象从而实现对目标对象功能扩展，有些地方也将**Cglib代理归属到动态代理**。
+- 在AOP编程中如何选择代理模式：
+  - 目标对象需要实现接口，用JDK代理
+  - 目标对象不需要实现接口，用Cglib代理
+- Cglib包的底层是通过使用字节码处理框架ASM来转换字节码并生成新的类。
+
+```java
+public class ProxyFactory implements MethodInterceptor {
+    // 维护一个目标对象
+    private Object target;
+
+    // 传入被代理对象
+    public ProxyFactory(Object target) {
+        this.target = target;
+    }
+
+    // 返回一个代理对象,是target对象的代理对象
+    public Object getProxyInstance(){
+        // 1.创建工具类
+        Enhancer enhancer = new Enhancer();
+        // 2.设置父类
+        enhancer.setSuperclass(target.getClass());
+        // 3.设置回调函数
+        enhancer.setCallback(this);
+        // 4.创建子类对象即代理对象
+        return enhancer.create();
+    }
+    // 重写 intercept 方法，会调用目标对象的方法
+    @Override
+    public Object intercept(Object o, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+        //
+        System.out.println("Cglib代理模式--开始");
+        Object returnVal = method.invoke(target,args);
+        System.out.println("Cglib代理提交");
+        return returnVal;
+    }
+}
+```
+

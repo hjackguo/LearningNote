@@ -21,7 +21,7 @@
 - 段选择子 ( Segment Selector ) : CS, DS, SS,...
 - 偏移量 (Offset ): EIP
 
->  x86启动顺序 - 从BIOS到Bootloader
+>  x86启动顺序 - 从BIOS (Basic Input Output System)到Bootloader
 
 - BIOS加载存储设备(如软盘、硬盘、光盘、USB盘)上的第一个扇区(主引导扇区, Mater Boot Record,or MBR)的512字节到内存的0x7c00 ...
 - 然后转跳到 @0x7c00的第一条指令开始执行
@@ -123,4 +123,27 @@
   - 需要指定中断号
   - 使用Trap，也称为Software generated interrupt
   - 或使用特殊指令(SYSENTER/SYSEXIT)
+
+# Lab 1
+
+本实验需要了解
+
+- 计算机原理
+  - CPU的编址与寻址：基于分段机制的内存管理
+  - CPU的中断机制
+  - 外设：串口/并口/CGA，时钟，硬盘
+- Bootloader软件
+  - 编译运行Bootloader的过程
+  - 调试bootloader的方法
+  - PC启动bootloader的过程
+  - ELF执行文件的格式和加载
+  - 外设访问：读硬盘，在CGA上显示字符串
+- ucore OS软件
+  - 编译运行ucore OS的过程
+  - 调试ucore OS的方法
+  - 函数调用关系：在汇编级了解函数调用栈的结构和处理过程
+  - 中断管理：与软件相关的中断处理
+  - 外设管理：时钟
+
+## 练习一
 

@@ -1,6 +1,6 @@
 # 数组
 
-## 0001. 两数之和
+## 0001.两数之和
 
 给定一个整数数组 `nums` 和一个整数目标值 `target`，请你在该数组中找出 **和为目标值** 的那 **两个** 整数，并返回它们的数组下标。
 
@@ -128,6 +128,105 @@ while (left<=right){
     }
 }
 ```
+
+## 0034.在排序数组中查找元素的第一个和最后一个位置
+
+```
+输入：nums = [5,7,7,8,8,10], target = 8
+输出：[3,4]
+```
+
+> 方法一：二分查找
+>
+> 时间复杂度: O(log N)
+>
+> 空间复杂度: O(1)
+
+
+
+## 0042.接雨水
+
+![](https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/10/22/rainwatertrap.png)
+
+```
+输入：height = [0,1,0,2,1,0,1,3,2,1,2,1]
+输出：6
+```
+
+> 解法一： 左右指针
+>
+> 时间复杂度: O(N)
+>
+> 空间复杂度: O(1)
+
+```java
+public static int trap(int[] height) {
+    int left = 0;
+    int right = height.length-1;
+    int maxLeft = 0;
+    int maxRight = 0;
+    int sum = 0;
+    while (left<=right){
+      	// 记录左右最大值
+        maxLeft = Math.max(maxLeft,height[left]);
+        maxRight = Math.max(maxRight,height[right]);
+      	// 移动小的值，移开时才记录进去sum
+        if(height[left]<height[right]){
+            sum+=maxLeft-height[left];
+            left++;
+        }else {
+            sum+=maxRight-height[right];
+            right--;
+        }
+    }
+    return sum;
+}
+```
+
+## 0048.旋转图像
+
+![img](https://assets.leetcode.com/uploads/2020/08/28/mat1.jpg)
+
+> 解法一： 两次镜像
+
+先左斜线镜像，然后中线镜像。
+
+
+
+## 0049.字母异位词分组
+
+```java
+输入: ["eat", "tea", "tan", "ate", "nat", "bat"]
+输出:
+[
+  ["ate","eat","tea"],
+  ["nat","tan"],
+  ["bat"]
+]
+```
+
+> 解法一：TreeMap<Character,Integer> charMap判断
+
+```java
+public static List<List<String>> groupAnagrams(String[] strs) {
+    HashMap<TreeMap,List<String>> map = new HashMap<>();
+    for(String str:strs){
+        TreeMap<Character,Integer> charMap = new TreeMap<>();
+        for(Character ch:str.toCharArray())
+            charMap.put(ch,charMap.getOrDefault(ch,0)+1);
+        List<String> list = map.getOrDefault(charMap,new ArrayList<>());
+        list.add(str);
+        map.put(charMap,list);
+    }
+    return new ArrayList<>(map.values());
+}
+```
+
+
+
+> 解法二：质数乘法(时间更快)
+
+用26个**质数**代表26个字母，乘积相同的就是同一个组！！！
 
 
 
@@ -364,7 +463,7 @@ Map<Integer,char[]> map = new HashMap<>();
 ```java
 // 核心代码
     public void recur(StringBuilder str,int left,int right){
-        // 左边数量大于右边数量，剪枝
+        // 左边剩余数量大于右边剩余数量，剪枝
         if(left>right) return;
       
         if(left==0&&right==0){
@@ -386,6 +485,70 @@ Map<Integer,char[]> map = new HashMap<>();
 ```
 
 本题目注意！剪枝细节！当剩余左括号>剩余右括号时，执行剪枝！
+
+## 0039.组合总和
+
+```
+输入：candidates = [2,3,5], target = 8,
+所求解集为：
+[
+  [2,2,2,2],
+  [2,3,3],
+  [3,5]
+]
+```
+
+```java
+class Solution {
+    int[] candidates;
+    int target;
+    List<Integer> currentList;
+    List<List<Integer>> finalLists;
+    public List<List<Integer>> combinationSum(int[] candidates, int target) {
+        this.candidates = candidates;
+        this.target = target;
+        currentList = new ArrayList<>();
+        finalLists = new ArrayList<>();
+        search();
+        return finalLists;
+    }
+
+    void search(){
+        if(target<0) return;
+        if(target==0){
+            finalLists.add(new ArrayList<>(currentList));
+            return;
+        }
+        for(int i=0;i<candidates.length;i++){
+            /** 跳过重复出现的情况
+            本处注意 [2,3,5] target=8例子中， 如果currentList=[2,3]
+            2进来触碰到跳过条件！不能return， 因为3进来满足，所以continue
+            **/
+            if(currentList.size()!=0&&currentList.get(currentList.size()-1)>candidates[i]) continue;
+
+            if(target>=candidates[i]){
+                currentList.add(candidates[i]);
+                target -= candidates[i];
+                search();
+                target += candidates[i];
+              	// remove比sublist省时间！  实测！！！
+                currentList.remove(currentList.size()-1);
+            }
+        }
+    }
+}
+```
+
+主要注意点： 跳过地方用continue而不是 return!不然会漏掉很多组合！
+
+## 0046.全排列
+
+```
+输入：nums = [1,2,3]
+输出：[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]
+```
+
+把Array转换成List操作，会快一点。
 
 
 

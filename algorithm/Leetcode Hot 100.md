@@ -225,10 +225,61 @@ public static List<List<String>> groupAnagrams(String[] strs) {
 
 
 > 解法二：质数乘法(时间更快)
+>
+> 缺点： 可能溢出！
 
 用26个**质数**代表26个字母，乘积相同的就是同一个组！！！
 
+## 0055.跳跃游戏(*)
 
+给定一个非负整数数组 nums ，你最初位于数组的 第一个下标 。
+
+数组中的每个元素代表你在该位置可以跳跃的最大长度。
+
+判断你是否能够到达最后一个下标。
+
+示例 1：
+
+```
+输入：nums = [2,3,1,1,4]
+输出：true
+解释：可以先跳 1 步，从下标 0 到达下标 1, 然后再从下标 1 跳 3 步到达最后一个下标。
+```
+
+>解法一：遍历数组，判断最远距离和当前下标
+>
+>时间复杂度 ：O(n)
+>
+>空间复杂度 :  O(1)
+
+```java
+public static boolean canJump(int[] nums) {
+  	// 记录最远距离
+    int maxFufure = 0;
+    for(int i=0;i<nums.length;i++){
+        if(maxFufure<i) return false;
+      	// 更新最远距离
+        maxFufure =  Math.max(maxFufure,i+nums[i]);
+    }
+    return true;
+}
+```
+
+**核心思想**：能够到达当前这点的话，最远距离大于等于当前坐标
+
+## 0056.合并区间
+
+```
+输入：intervals = [[1,3],[2,6],[8,10],[15,18]]
+输出：[[1,6],[8,10],[15,18]]
+解释：区间 [1,3] 和 [2,6] 重叠, 将它们合并为 [1,6].
+```
+
+> 解法一：快排后合并
+
+先用快排队起始数值进行排序后，看是否存在交叉。 然后分交叉和不交叉情况处理。
+
+注意，交叉情况下，区间的闭部分选最远的。
 
 # 链表
 
@@ -583,6 +634,142 @@ class Solution {
 用栈模拟过程 把"(()()))"转换成“1111110”，然后统计最长连续为1的数量！
 
 
+
+# 动态规划
+
+## 0054.最大序列和
+
+给定一个整数数组 `nums` ，找到一个具有最大和的连续子数组（子数组最少包含一个元素），返回其最大和。
+
+**示例 1：**
+
+```
+输入：nums = [-2,1,-3,4,-1,2,1,-5,4]
+输出：6
+解释：连续子数组 [4,-1,2,1] 的和最大，为 6 。
+```
+
+> 解法一：动态规划
+>
+> 时间复杂度：O(N)
+>
+> 空间复杂度：O(N) 可以优化成O(1),更新上一个状态量
+
+```java
+public int maxSubArray(int[] nums) {
+    int[] dp = new int[nums.length];
+    dp[0] = nums[0];
+    int max = dp[0];
+    for(int i=1;i<nums.length;i++) {
+      // 核心
+        dp[i] = dp[i - 1] < 0 ? nums[i] : nums[i] + dp[i - 1];
+        max = Math.max(max,dp[i]);
+    }
+    return max;
+}
+```
+
+## 0062.不同路径(*)
+
+机器人每次只能向下或者向右移动一步。机器人试图达到网格的右下角（在下图中标记为 “Finish” ）。
+
+问总共有多少条不同的路径？
+
+![](https://assets.leetcode.com/uploads/2018/10/22/robot_maze.png)
+
+> 解法一： 模拟深度搜索
+>
+> 算法复杂度：指数级别
+>
+> 空间复杂度: O(1)
+
+```java
+    int total = 0;
+    int m;
+    int n;
+
+    public int uniquePaths_recursion(int m, int n) {
+        this.m = m;
+        this.n = n;
+        move(0,0);
+        return total;
+    }
+    void move(int currentM,int currentN){
+        if(currentM>=m) return;
+        if(currentN>=n) return;
+        if(currentM==m-1&&currentN==n-1){
+            total++;
+            return;
+        }
+        move(currentM+1,currentN);
+        move(currentM,currentN+1);
+    }
+```
+
+> 解法二: 排列组合
+>
+> 算法复杂度: O(N)
+>
+> 空间复杂度: O(1)
+>
+> 有溢出风险
+
+一共走m+n-2步，从其中挑选m-1或n-1出来
+
+C(m+n-2,Math.min(m-1,n-1))
+
+注意：本处要判断用m-1还是n-1，减少计算量，防止long溢出
+
+本算法还是存在溢出风险！
+
+```java
+    public static int uniquePaths_permutation(int m,int n){
+        if(n<m){
+            int tmp = n;
+            n=m;
+            m=tmp;
+        }
+        long result = 1;
+        int count = m-1;
+        int initial = m+n-2;
+        while (count>0){
+            result *= initial;
+            count--;
+            initial--;
+        }
+        count = m-1;
+        while (count>0){
+            result/=count;
+            count--;
+        }
+        return (int) result;
+    }
+```
+
+> 解法三：动态规划
+>
+> 计算复杂度：O(m*n)
+>
+> 空间复杂度: O(m*n)
+
+dp[m]'[n] = dp[m-1]'[n]+dp[m]'[n-1]
+
+```java
+    public static int uniquePaths_dp(int m,int n){
+        int[][] dp = new int[m][n];
+        for(int i=0;i<m;i++)
+            dp[i][0] = 1;
+        for(int i=0;i<n;i++)
+            dp[0][i] = 1;
+        for(int i=1;i<m;i++)
+            for (int j=1;j<n;j++){
+                dp[i][j] = dp[i-1][j]+dp[i][j-1];
+            }
+        return dp[m-1][n-1];
+    }
+```
+
+0064.
 
 # 其它
 

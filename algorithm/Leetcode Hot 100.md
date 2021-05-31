@@ -769,7 +769,103 @@ dp[m]'[n] = dp[m-1]'[n]+dp[m]'[n-1]
     }
 ```
 
-0064.
+## 0064.最小路径和
+
+![](https://assets.leetcode.com/uploads/2020/11/05/minpath.jpg)
+
+给定一个包含非负整数的 `*m* x *n*` 网格 `grid` ，请找出一条从左上角到右下角的路径，使得路径上的数字总和为最小。
+
+**说明：**每次只能向下或者向右移动一步。
+
+> 解法一：动态规划
+>
+> 算法复杂度: O(m*n)
+>
+> 空间复杂度: O(m*n)
+
+
+
+## 0070.爬楼梯
+
+假设你正在爬楼梯。需要 *n* 阶你才能到达楼顶。
+
+每次你可以爬 1 或 2 个台阶。你有多少种不同的方法可以爬到楼顶呢？
+
+> 解法一：动态规划
+>
+> 时间复杂度: O(N)
+>
+> 空间复杂度：O(1)
+
+
+
+## 0072.编辑距离(*)
+
+给你两个单词 word1 和 word2，请你计算出将 word1 转换成 word2 所使用的最少操作数 。
+
+你可以对一个单词进行如下三种操作：
+
+插入一个字符
+删除一个字符
+替换一个字符
+
+```java
+输入：word1 = "intention", word2 = "execution"
+输出：5
+解释：
+intention -> inention (删除 't')
+inention -> enention (将 'i' 替换为 'e')
+enention -> exention (将 'n' 替换为 'x')
+exention -> exection (将 'n' 替换为 'c')
+exection -> execution (插入 'u')
+```
+
+> 解法一： 动态规划
+>
+> 时间复杂度: O(N^2)
+>
+> 空间复杂度: O(N^2)
+
+![](/Users/guohuanjie/Documents/programming/LearnNote/algorithm/Leetcode Hot 100.assets/76574ab7ff2877d63b80a2d4f8496fab3c441065552edc562f62d5809e75e97e-Snipaste_2019-05-29_15-28-02.png)
+
+```java
+public int minDistance(String word1, String word2) {
+    int len1 = word1.length();
+    int len2 = word2.length();
+    int[][] dp = new int[len1+1][len2+1];
+    // 空和空匹配
+    dp[0][0] = 0;
+    // 插入
+    for(int i=1;i<=len2;i++)
+        dp[0][i] = dp[0][i-1]+1;
+    // 删除
+    for(int i=1;i<=len1;i++)
+        dp[i][0] = dp[i-1][0]+1;
+    // 正常
+    for(int i=1;i<=len1;i++)
+        for(int j=1;j<=len2;j++)
+            /**
+             i和j字符相同，操作次数等于 dp[i-1][j-1]
+             */
+            if(word1.charAt(i-1)==word2.charAt(j-1)) dp[i][j] = dp[i-1][j-1];
+            /**
+             i和j字符不同.
+             dp[i-1][j-1] 表示替换
+             dp[i-1][j] 表示删除
+             dp[i][j-1] 表示插入
+
+             word1为"horse", word2为"ros"
+             1. dp[i-1][j-1] 先将word1前4个字母horse转换成word2前2个字母ro, 再将word1第五个字母e替换成word2第三个字母s
+             2. dp[i][j-1] 先将word1前5个字母转成word2前2个字母ro,然后插入word2第三个字母s
+             3. dp[i-1][j] 先将word1前4个字母转成word2 即ros,然后删除最后一个
+             三个操作选择最小那个 + 1 就行！
+             */
+            else dp[i][j] = Math.min(Math.min(dp[i-1][j-1],dp[i-1][j]),dp[i][j-1])+1;
+    return dp[len1][len2];
+}
+```
+
+
 
 # 其它
 
@@ -788,4 +884,6 @@ dp[m]'[n] = dp[m-1]'[n]+dp[m]'[n-1]
 > 解法二：int解法
 
 注意，要时刻判断临结束前一步的值，是否比Integer.Maxium大，如果大返回0，如果等于，判断最后一位是否大于7，如果是，返回0.
+
+
 

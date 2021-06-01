@@ -404,6 +404,72 @@ public ListNode mergeKLists(ListNode[] lists) {
 
 ## 0010.正则表达式匹配(待完成)
 
+## 0076.最小覆盖子串(*)
+
+给你一个字符串 s 、一个字符串 t 。返回 s 中涵盖 t 所有字符的最小子串。如果 s 中不存在涵盖 t 所有字符的子串，则返回空字符串 "" 。
+
+注意：如果 s 中存在这样的子串，我们保证它是唯一的答案。
+
+```java
+输入：s = "ADOBECODEBANC", t = "ABC"
+输出："BANC"
+```
+
+> 解法一： 双指针+2个Map+Rest Count记录量
+>
+> 时间复杂度：O(N)
+>
+> 空间复杂度：O(N)
+
+```java
+public static String minWindow(String s, String t) {
+    if(s==null||s.equals("")||t==null||t.equals("")) return "";
+    // 本处restCount用于判断当前还缺多少个匹配，减少了遍历patternMap的时间！
+    int left=0, right=0,restCount = t.length(),lengthS = s.length();
+    String currentStr = null;
+    int currentLength = -1;
+    // 初始化
+    Map<Character,Integer> winMap = new HashMap<>();
+    Map<Character,Integer> pattenMap = new HashMap<>();
+    for(Character ch:t.toCharArray())
+        pattenMap.put(ch,pattenMap.getOrDefault(ch,0)+1);
+    // 移动右指针
+    while (right<lengthS){
+        char ch = s.charAt(right);
+        // 过滤无关的
+        if(!pattenMap.containsKey(ch)){
+            right++;
+            continue;
+        }
+        // 有效的进入
+        winMap.put(ch,winMap.getOrDefault(ch,0)+1);
+        // 剩余需要寻找的字母-1
+        if(winMap.get(ch)<=pattenMap.getOrDefault(ch,0)) restCount--;
+        // 找完了后，左指针收缩
+        while (restCount==0){
+            if(currentLength==-1||currentLength>right-left+1) {
+                currentStr = s.substring(left, right + 1);
+                currentLength = right-left+1;
+            }
+            // 收缩左指针
+            char leftChar = s.charAt(left);
+            if(pattenMap.containsKey(leftChar)) {
+                // 在里面，判断去除然后操作
+                winMap.put(leftChar, winMap.get(leftChar) - 1);
+                // 造成影响
+                if (winMap.get(leftChar) < pattenMap.get(leftChar)) restCount++;
+            }
+            // 直接收缩leftChar
+            left++;
+        }
+        right++;
+    }
+    return currentStr==null?"":currentStr;
+}
+```
+
+核心，pattenMap用于记录匹配串分布，winMap用于记录当前窗口中相关字符情况。 如果没有记录量，每次都要遍历pattenMap每个key判断是否全满足，耗时！ 因此，我们引入restCount信号量，用来记录待匹配的字符数，用map协助修改，当restCount==0时，当前窗口就满足条件。
+
 # 二分
 
 ## 0004.寻找两个正序数列的中位数(*)
@@ -864,6 +930,21 @@ public int minDistance(String word1, String word2) {
     return dp[len1][len2];
 }
 ```
+
+# 排序
+
+## 0075.颜色分类(快排)
+
+给定一个包含红色、白色和蓝色，一共 n 个元素的数组，原地对它们进行排序，使得相同颜色的元素相邻，并按照红色、白色、蓝色顺序排列。
+
+此题中，我们使用整数 0、 1 和 2 分别表示红色、白色和蓝色。
+
+```
+输入：nums = [2,0,2,1,1,0]
+输出：[0,0,1,1,2,2]
+```
+
+复习下快速排序 O(N*Log(N) )
 
 
 

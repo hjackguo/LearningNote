@@ -669,6 +669,101 @@ class Solution {
 
 
 
+## 0078.子集
+
+给你一个整数数组 `nums` ，数组中的元素 **互不相同** 。返回该数组所有可能的子集（幂集）。
+
+解集 **不能** 包含重复的子集。你可以按 **任意顺序** 返回解集。
+
+```
+输入：nums = [1,2,3]
+输出：[[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]
+```
+
+> 解法一： 回溯法
+
+```java
+public class A0078_Subsets {
+    int[] nums;
+    int length;
+    List<Integer> current;
+    List<List<Integer>> result;
+    public List<List<Integer>> subsets(int[] nums) {
+        this.nums = nums;
+        length = nums.length;
+        current = new ArrayList<>();
+        result = new ArrayList<>();
+        recur(0);
+        return result;
+    }
+    public void recur(int idx){
+        result.add(new ArrayList<>(current));
+        for(int i=idx;i< nums.length;i++){
+            current.add(nums[i]);
+            recur(i+1);
+            current.remove(current.size()-1);
+        }
+    }
+}
+```
+
+## 0079.单词搜索
+
+![](https://assets.leetcode.com/uploads/2020/11/04/word2.jpg)
+
+```
+输入：board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCCED"
+输出：true
+```
+
+> 解法一：回溯法
+
+```java
+class Solution {
+    char[] chs;
+    char[][] board;
+    int haveMatchCount;
+    int length;
+    int width;
+    int height;
+    boolean finish;
+    public boolean exist(char[][] board, String word) {
+        this.board = board;
+        if (board.length==0) return false;
+        chs = word.toCharArray();
+        haveMatchCount = 0;
+        length = chs.length;
+        height = board.length;
+        width = board[0].length;
+        for(int i=0;i<board.length;i++)
+            for(int j=0;j<board[0].length;j++)
+            search(i,j);
+        return finish;
+    }
+    void search(int i,int j){
+        if(haveMatchCount==length){
+            finish = true;
+            return;
+        }
+        if(i<0||j<0||i>=height||j>=width||finish) return;
+        if(board[i][j]=='/') return;
+        if(board[i][j] == chs[haveMatchCount]){
+            haveMatchCount++;
+            char ch = board[i][j];
+            board[i][j] = '/';
+            search(i+1,j);
+            search(i-1,j);
+            search(i,j-1);
+            search(i,j+1);
+            board[i][j] = ch;
+            haveMatchCount--;
+        }
+    }
+}
+```
+
+
+
 # 栈
 
 ## 0020.有效的括号

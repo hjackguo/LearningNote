@@ -26,7 +26,7 @@ NoSQL给架构中加了Cache层。
 
 在上面的优化后，可以采用分表结构。编号1-3000万在一个库，3000万-6000万在另一个库。
 
-![WeChatb13a81c87e872c64bafe192f73ed90bf](https://picgohuanjie.oss-cn-beijing.aliyuncs.com/img/WeChatb13a81c87e872c64bafe192f73ed90bf.png)
+![WeChatb13a81c87e872c64bafe192f73ed90bf](https://picgohuanjie.oss-cn-beijing.aliyuncs.com/img/WeChatb13a81c87e872c64bafe192f73ed90bf.png?x-oss-process=style/compress)
 
 
 
@@ -123,7 +123,7 @@ NoSQL给架构中加了Cache层。
 
 # NoSQL数据模型
 
-![WeChat9dbad2271ca8ad938be97b891a27d1a61](https://picgohuanjie.oss-cn-beijing.aliyuncs.com/img/WeChat9dbad2271ca8ad938be97b891a27d1a61.png)
+![WeChat9dbad2271ca8ad938be97b891a27d1a61](https://picgohuanjie.oss-cn-beijing.aliyuncs.com/img/WeChat9dbad2271ca8ad938be97b891a27d1a61.png?x-oss-process=style/compress)
 
 
 

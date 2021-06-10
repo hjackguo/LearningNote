@@ -1090,9 +1090,9 @@ exection -> execution (插入 'u')
 >
 > 时间复杂度: O(N^2)
 >
-> 空![76574ab7ff2877d63b80a2d4f8496fab3c441065552edc562f62d5809e75e97e-Snipaste_2019-05-29_15-28-02](Leetcode Hot 100.assets/76574ab7ff2877d63b80a2d4f8496fab3c441065552edc562f62d5809e75e97e-Snipaste_2019-05-29_15-28-02.png)间复杂度: O(N^2)
+> 空间复杂度: O(N^2)
 
-
+![5271623298544_.pic](https://cdn.jsdelivr.net/gh/HuanjieGuo/PicGo/img/5271623298544_.pic.jpg)
 
 ```java
 public int minDistance(String word1, String word2) {

@@ -123,7 +123,7 @@ NoSQL给架构中加了Cache层。
 
 # NoSQL数据模型
 
-![WeChat9dbad2271ca8ad938be97b891a27d1a61](https://cdn.jsdelivr.net/gh/HuanjieGuo/PicGo/img/WeChat9dbad2271ca8ad938be97b891a27d1a61.png)
+![WeChat9dbad2271ca8ad938be97b891a27d1a61](https://picgohuanjie.oss-cn-beijing.aliyuncs.com/img/WeChat9dbad2271ca8ad938be97b891a27d1a61.png)
 
 
 

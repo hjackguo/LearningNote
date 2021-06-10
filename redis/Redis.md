@@ -8,25 +8,25 @@ No Only SQL. 泛指非关系型数据库。 有些类型的数据存储(人际�
 
 > 为什么要NoSQL?
 
-![WeChat03fa68f2d87beaf6de8621542f827fcc](/Users/guohuanjie/Documents/programming/LearnNote/redis/Redis.assets/WeChat03fa68f2d87beaf6de8621542f827fcc.png)
+![WeChat03fa68f2d87beaf6de8621542f827fcc](https://cdn.jsdelivr.net/gh/HuanjieGuo/PicGo/img/WeChat03fa68f2d87beaf6de8621542f827fcc.png)
 
-![WeChat6cead5ec49ba9cef3dce7c7c60f2143b](/Users/guohuanjie/Documents/programming/LearnNote/redis/Redis.assets/WeChat6cead5ec49ba9cef3dce7c7c60f2143b.png)
+![WeChat6cead5ec49ba9cef3dce7c7c60f2143b](https://picgohuanjie.oss-cn-beijing.aliyuncs.com/img/WeChat6cead5ec49ba9cef3dce7c7c60f2143b.png)
 
 主从机，读写分离
 
-![WeChatf7e3427bab6fc1421126be21ae3cc33e](/Users/guohuanjie/Documents/programming/LearnNote/redis/Redis.assets/WeChatf7e3427bab6fc1421126be21ae3cc33e-2981028.png)
+![WeChatf7e3427bab6fc1421126be21ae3cc33e](https://cdn.jsdelivr.net/gh/HuanjieGuo/PicGo/img/WeChatf7e3427bab6fc1421126be21ae3cc33e.png)
 
 
 
 后面的优化方向往集群走，把不同的业务分到不同集群。如注册数据和业务数据是放置在不同集群上。
 
-![WeChat81ecf05f34e2213c937599a32b8997e9](/Users/guohuanjie/Documents/programming/LearnNote/redis/Redis.assets/WeChat81ecf05f34e2213c937599a32b8997e9.png)
+![WeChat81ecf05f34e2213c937599a32b8997e9](https://cdn.jsdelivr.net/gh/HuanjieGuo/PicGo/img/WeChat81ecf05f34e2213c937599a32b8997e9.png)
 
 NoSQL给架构中加了Cache层。
 
 在上面的优化后，可以采用分表结构。编号1-3000万在一个库，3000万-6000万在另一个库。
 
-![WeChatb13a81c87e872c64bafe192f73ed90bf](/Users/guohuanjie/Documents/programming/LearnNote/redis/Redis.assets/WeChatb13a81c87e872c64bafe192f73ed90bf.png)
+![WeChatb13a81c87e872c64bafe192f73ed90bf](https://picgohuanjie.oss-cn-beijing.aliyuncs.com/img/WeChatb13a81c87e872c64bafe192f73ed90bf.png)
 
 
 
@@ -117,13 +117,13 @@ NoSQL给架构中加了Cache层。
     - API
     - 热点缓存
 
-![WeChat840a61d1d7de9cc900ee9c1c702153b7](/Users/guohuanjie/Documents/programming/LearnNote/redis/Redis.assets/WeChat840a61d1d7de9cc900ee9c1c702153b7.png)
+![WeChat840a61d1d7de9cc900ee9c1c702153b7](https://cdn.jsdelivr.net/gh/HuanjieGuo/PicGo/img/WeChat840a61d1d7de9cc900ee9c1c702153b7.png)
 
 
 
 # NoSQL数据模型
 
-![WeChat9dbad2271ca8ad938be97b891a27d1a6](/Users/guohuanjie/Documents/programming/LearnNote/redis/Redis.assets/WeChat9dbad2271ca8ad938be97b891a27d1a6.png)
+![WeChat9dbad2271ca8ad938be97b891a27d1a61](https://cdn.jsdelivr.net/gh/HuanjieGuo/PicGo/img/WeChat9dbad2271ca8ad938be97b891a27d1a61.png)
 
 
 
@@ -131,11 +131,11 @@ NoSQL给架构中加了Cache层。
 
 **关系型数据库**
 
-![WeChat4453afd0495a10529447ee77e18bbd7c](/Users/guohuanjie/Documents/programming/LearnNote/redis/Redis.assets/WeChat4453afd0495a10529447ee77e18bbd7c.png)
+![WeChat4453afd0495a10529447ee77e18bbd7c](https://cdn.jsdelivr.net/gh/HuanjieGuo/PicGo/img/WeChat4453afd0495a10529447ee77e18bbd7c.png)
 
 **非关系型数据库**
 
-![WeChat4c9f02dc3c0d9a47dde2c0e9539c2e9c](/Users/guohuanjie/Documents/programming/LearnNote/redis/Redis.assets/WeChat4c9f02dc3c0d9a47dde2c0e9539c2e9c.png)
+![WeChat4c9f02dc3c0d9a47dde2c0e9539c2e9c](https://picgohuanjie.oss-cn-beijing.aliyuncs.com/img/WeChat4c9f02dc3c0d9a47dde2c0e9539c2e9c.png)
 
 
 
@@ -158,13 +158,13 @@ NoSQL给架构中加了Cache层。
 - Bson
 - 列族
 
-![WeChat020df6187c37c1fe45da583a94aa727d](/Users/guohuanjie/Documents/programming/LearnNote/redis/Redis.assets/WeChat020df6187c37c1fe45da583a94aa727d.png)
+![WeChat020df6187c37c1fe45da583a94aa727d](https://picgohuanjie.oss-cn-beijing.aliyuncs.com/img/WeChat020df6187c37c1fe45da583a94aa727d.png)
 
 
 
 - 图形
 
-![WeChatd233079f0064e6db67e94211d39bf411](/Users/guohuanjie/Documents/programming/LearnNote/redis/Redis.assets/WeChatd233079f0064e6db67e94211d39bf411.png)
+![WeChatd233079f0064e6db67e94211d39bf411](https://picgohuanjie.oss-cn-beijing.aliyuncs.com/img/WeChatd233079f0064e6db67e94211d39bf411.png)
 
 
 
@@ -217,7 +217,7 @@ CP - 满足一致性，分区容忍性的系统，通常性能不是特别高
 
 AP - 满足可用性，分区容忍性的系统，通常可能对一致性要求低一点。
 
-![WeChat32f6d4b4c51a0360ea09e4ad312ef358](/Users/guohuanjie/Documents/programming/LearnNote/redis/Redis.assets/WeChat32f6d4b4c51a0360ea09e4ad312ef358.png)
+![WeChat32f6d4b4c51a0360ea09e4ad312ef358](https://picgohuanjie.oss-cn-beijing.aliyuncs.com/img/WeChat32f6d4b4c51a0360ea09e4ad312ef358.png)
 
 
 

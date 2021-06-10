@@ -796,6 +796,111 @@ class Solution {
 
 
 
+## 0084.柱状图中最大的柜形(*)
+
+给定 *n* 个非负整数，用来表示柱状图中各个柱子的高度。每个柱子彼此相邻，且宽度为 1 。
+
+求在该柱状图中，能够勾勒出来的矩形的最大面积。
+
+![](https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/10/12/histogram.png)
+
+![](https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/10/12/histogram_area.png)
+
+> 解法一：找最短那根切分(超时)
+>
+> 时间复杂度: O(N^2)
+>
+> 空间复杂度: O(1)
+
+第一次找到index为1(因为本根最低)的做切分，计算[0,0]和[2,5]区间内的最大面积。
+
+
+
+> 解法二：暴力解法
+>
+> 时间复杂度: O(N^2)
+>
+> 空间复杂度: O(1)
+
+先固定第一根，左右指针扩散找比第一根高的，最后底*第一根高度。切换到第二根。
+
+
+
+> 解法三： 单调递增栈
+>
+> 时间复杂度 : O(N)
+>
+> 空间复杂度: O(N)
+
+[csdn讲解单调递增栈](https://blog.csdn.net/Zolewit/article/details/88863970)
+
+```java
+    public static int largestRectangleArea_stack(int[] heights) {
+        heights = Arrays.copyOf(heights,heights.length+1);
+        Stack<Integer> stack = new Stack<>();
+        int maxArea = 0;
+        for(int i=0;i<heights.length;i++){
+            while (!stack.isEmpty()&&heights[stack.peek()]>heights[i]){
+                int top = stack.pop();
+                maxArea = Math.max(maxArea,heights[top]*(stack.isEmpty()?i:(i-stack.peek()-1)));
+            }
+            stack.push(i);
+        }
+        return maxArea;
+    }
+```
+
+计算顺序，自己动手推算！
+
+1. 2*1
+2. 6*(4-2-1)
+3. 5*(4-1-1)
+4. 3*(6-4-1)
+5. 2*(6-1-1)
+6. 1*6
+
+
+
+## 0085.最大矩形(*)
+
+![](https://assets.leetcode.com/uploads/2020/09/14/maximal.jpg)
+
+> 解法一： 高度转换，递增栈方法调用column次, 参考0084
+>
+> 时间复杂度: O(M*N)
+>
+> 空间复杂度: O(N)
+
+![](https://pic.leetcode-cn.com/aabb1b287134cf950aa80526806ef4025e3920d57d237c0369ed34fae83e2690-image.png)
+
+```java
+public int maximalRectangle(char[][] matrix) {
+    if(matrix.length==0) return 0;
+    int[] heights = new int[matrix[0].length+1];
+    int maxArea = 0;
+    for(int row=0;row<matrix.length;row++){
+        for(int i=0;i<heights.length-1;i++)
+            heights[i] = matrix[row][i]=='1'?heights[i]+1:0;
+        maxArea = Math.max(maxArea,calculateMaxArea(heights));
+    }
+    return maxArea;
+}
+public int calculateMaxArea(int[] heights){
+    int maxArea = 0;
+    Stack<Integer> stack = new Stack<>();
+    for(int i=0;i<heights.length;i++){
+        while (!stack.isEmpty()&&heights[stack.peek()]>heights[i]){
+            int top = stack.pop();
+            maxArea = Math.max(maxArea,heights[top]*(stack.isEmpty()?i:i-stack.peek()-1));
+        }
+        stack.push(i);
+    }
+    return maxArea;
+}
+```
+
+
+
 # 动态规划
 
 ## 0054.最大序列和

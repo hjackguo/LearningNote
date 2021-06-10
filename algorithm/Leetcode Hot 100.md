@@ -1092,7 +1092,7 @@ exection -> execution (插入 'u')
 >
 > 空间复杂度: O(N^2)
 
-![](/Users/guohuanjie/Documents/programming/LearnNote/algorithm/Leetcode Hot 100.assets/76574ab7ff2877d63b80a2d4f8496fab3c441065552edc562f62d5809e75e97e-Snipaste_2019-05-29_15-28-02.png)
+![](./Leetcode Hot 100.assets/76574ab7ff2877d63b80a2d4f8496fab3c441065552edc562f62d5809e75e97e-Snipaste_2019-05-29_15-28-02.png)
 
 ```java
 public int minDistance(String word1, String word2) {

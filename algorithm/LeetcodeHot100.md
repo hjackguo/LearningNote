@@ -1139,12 +1139,178 @@ public int minDistance(String word1, String word2) {
 
 此题中，我们使用整数 0、 1 和 2 分别表示红色、白色和蓝色。
 
-```
+```java
 输入：nums = [2,0,2,1,1,0]
 输出：[0,0,1,1,2,2]
 ```
 
 复习下快速排序 O(N*Log(N) )
+
+
+
+# 树
+
+## 0094.二叉树的中序遍历
+
+![](https://assets.leetcode.com/uploads/2020/09/15/inorder_1.jpg)
+
+```java
+输入：root = [1,null,2,3]
+输出：[1,3,2]
+```
+
+
+
+## 0096.不同的二叉搜索树(*)
+
+给你一个整数 `n` ，求恰由 `n` 个节点组成且节点值从 `1` 到 `n` 互不相同的 **二叉搜索树** 有多少种？返回满足题意的二叉搜索树的种数。
+
+![](https://assets.leetcode.com/uploads/2021/01/18/uniquebstn3.jpg)
+
+```
+输入：n = 3
+输出：5
+```
+
+> 解法一：DP算法
+
+从0个节点的空树模拟至n的节点的树
+
+选出一个根结点，然后不断变动左节点个数，所有情况累积
+
+```java
+public static int numTrees(int n) {
+    int[] dp = new int[n+1];
+    dp[0] = 1;
+    dp[1] = 1;
+    // 几个节点
+    for(int i=2;i<=n;i++)
+        // 树的左边分几个
+        for(int left=0;left<=i-1;left++)
+            // i-1表示去除根结点，i-1-left表示右边个数
+            dp[i] += dp[left]*dp[i-1-left];
+    return dp[n];
+}
+```
+
+## 0098.验证二叉搜索树(*)
+
+给定一个二叉树，判断其是否是一个有效的二叉搜索树。
+
+假设一个二叉搜索树具有如下特征：
+
+节点的左子树只包含小于当前节点的数。
+节点的右子树只包含大于当前节点的数。
+所有左子树和右子树自身必须也是二叉搜索树。
+
+```java
+输入:
+    5
+   / \
+  1   4
+     / \
+    3   6
+输出: false
+解释: 5的右边存在比5小的
+```
+
+> 解法一： 中序遍历+递增判断
+
+```java
+public class A0098_IsValidBST {
+    /**
+     * 中序遍历为升序
+     * @param root
+     * @return
+     */
+    Integer last;
+    boolean isValid;
+    public boolean isValidBST(TreeNode root) {
+        isValid = true;
+        inOrderSearch(root);
+        return isValid;
+    }
+    void inOrderSearch(TreeNode node){
+        if(node==null||!isValid) return;
+        inOrderSearch(node.left);
+        if(last==null) last = node.val;
+        else {
+            // 本处注意， 只设置为false，不要 isValid = node.val>last, 会出错
+            if(node.val<=last) isValid = false;
+            last = node.val;
+        }
+        inOrderSearch(node.right);
+    }
+}
+```
+
+## 0101.对称二叉树
+
+例如，二叉树 `[1,2,2,3,4,4,3]` 是对称的。
+
+```
+    1
+   / \
+  2   2
+ / \ / \
+3  4 4  3
+```
+
+> 解法一：值对比+左比右 右比左
+
+```java
+public boolean isSymmetric(TreeNode root) {
+    if(root==null) return true;
+    return compare(root.left,root.right);
+}
+public boolean compare(TreeNode a,TreeNode b){
+    if(a==null&&b==null) return true;
+    if(a==null||b==null) return false;
+    return a.val==b.val
+            &&compare(a.left,b.right)
+            &&compare(a.right,b.left);
+}
+```
+
+## 0102.二叉树的层序遍历
+
+示例：
+二叉树：[3,9,20,null,null,15,7],
+
+    		3
+       / \
+      9  20
+        /  \
+       15   7
+```
+返回其层序遍历结果：
+[
+  [3],
+  [9,20],
+  [15,7]
+]
+```
+
+father队列和child队列！
+
+## 0104.二叉树的最大深度
+
+示例：
+给定二叉树 [3,9,20,null,null,15,7]，
+
+    		3
+       / \
+      9  20
+        /  \
+       15   7
+返回它的最大深度 3 。
+
+```java
+public int maxDepth(TreeNode root) {
+    if(root==null)  return 0;
+    return 1+Math.max(maxDepth(root.left),maxDepth(root.right));
+}
+```
 
 
 

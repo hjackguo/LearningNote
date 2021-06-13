@@ -281,6 +281,20 @@ public static boolean canJump(int[] nums) {
 
 注意，交叉情况下，区间的闭部分选最远的。
 
+## 0121.买卖股票的最佳时机
+
+```java
+输入：[7,1,5,3,6,4]
+输出：5
+解释：在第 2 天（股票价格 = 1）的时候买入，在第 5 天（股票价格 = 6）的时候卖出，最大利润 = 6-1 = 5 。
+     注意利润不能是 7-1 = 6, 因为卖出价格需要大于买入价格；同时，你不能在买入前卖出股票。
+
+```
+
+> 方法一：记录最小值
+
+
+
 # 链表
 
 ## 0002. 两数相加
@@ -1309,6 +1323,154 @@ father队列和child队列！
 public int maxDepth(TreeNode root) {
     if(root==null)  return 0;
     return 1+Math.max(maxDepth(root.left),maxDepth(root.right));
+}
+```
+
+
+
+## 0105.从前序与中序遍历序列构造二叉树(*)
+
+前序遍历 preorder = [3,9,1,2,20,15,7]
+中序遍历 inorder = [1,9,2,3,15,20,7]
+返回如下的二叉树：
+
+```java
+			3
+  	 / \
+	  9   20
+   / \  / \
+  1  2 15	 7
+```
+> 解法一： 画图
+
+先把inorder的值放进map,记录其对应坐标
+
+![5331623552953_.pic](https://picgohuanjie.oss-cn-beijing.aliyuncs.com/img/5331623552953_.pic.jpg?x-oss-process=style/compress)
+
+```java
+public class A0105_BuildTree {
+    Map<Integer,Integer> inOrderIdx;
+    int[] preorder;
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        this.preorder = preorder;
+        inOrderIdx = new HashMap<>();
+        for(int i=0;i<inorder.length;i++)
+            inOrderIdx.put(inorder[i],i);
+        return build(0,preorder.length-1,0,inorder.length-1);
+    }
+    public TreeNode build(int preL,int preR,int inL,int inR){
+        if(preL>preR) return null;
+        TreeNode node = new TreeNode(preorder[preL]);
+        int pivot = inOrderIdx.get(node.val);
+        node.left = build(preL+1,preL+(pivot-inL),inL,pivot-1);
+        node.right = build(preL+(pivot-inL)+1,preR,pivot+1,inR);
+        return node;
+    }
+}
+```
+
+## 0114.二叉树展开为链表(*)
+
+![5341623558197_.pic](https://picgohuanjie.oss-cn-beijing.aliyuncs.com/img/5341623558197_.pic.jpg?x-oss-process=style/compress)
+
+> 解法一： 右节点接入左子树最右节点
+
+```java
+    1
+   / \
+  2   5
+ / \   \
+3   4   6
+
+//将 1 的左子树插入到右子树的地方
+    1
+     \
+      2         5
+     / \         \
+    3   4         6        
+//将原来的右子树接到左子树的最右边节点
+    1
+     \
+      2          
+     / \          
+    3   4  
+         \
+          5
+           \
+            6
+            
+ //将 2 的左子树插入到右子树的地方
+    1
+     \
+      2          
+       \          
+        3       4  
+                 \
+                  5
+                   \
+                    6   
+        
+ //将原来的右子树接到左子树的最右边节点
+    1
+     \
+      2          
+       \          
+        3      
+         \
+          4  
+           \
+            5
+             \
+              6         
+  
+  ......
+
+```
+
+```java
+/**
+1. 如果左子树不为空
+2. 找到左子树最右边的节点
+3. 节点右节点接入到左子树最右节点
+4. 节点右子树等于左子树
+5. 左子树置空
+6. root = root.right
+*/
+public void flatten(TreeNode root) {
+    if(root==null) return;
+    if(root.left!=null){
+        // 找left的最右边节点
+        TreeNode rightestNode = root.left;
+        while (rightestNode.right!=null)
+            rightestNode = rightestNode.right;
+        // 右子树接在左子树最右节点上
+        rightestNode.right = root.right;
+        // 左子树替换右子树
+        root.right = root.left;
+        // 左子树置空
+        root.left = null;
+    }
+    // 递归
+    flatten(root.right);
+}
+```
+
+> 解法二： 变形的后序遍历   (右 左  中)
+
+从最后的节点往前指，案例中的遍历顺序其实是 6 5 4 3 2 1。 6<-5 4 3 2 1， 用pre指针保留上一次值。
+
+```java
+class Solution {
+    TreeNode pre;
+    public void flatten(TreeNode root){
+        if(root==null) return;
+        // 右 -> 左 -> 本节点
+        flatten(root.right);
+        flatten(root.left);
+        root.left = null;
+        root.right = pre;
+        pre = root;
+    }
 }
 ```
 

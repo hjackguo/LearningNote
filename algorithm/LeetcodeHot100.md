@@ -295,6 +295,118 @@ public static boolean canJump(int[] nums) {
 
 
 
+## 0128.最长连续序列(*)
+
+给定一个未排序的整数数组 nums ，找出数字连续的最长序列（不要求序列元素在原数组中连续）的长度。
+
+ 进阶：你可以设计并实现时间复杂度为 O(n) 的解决方案吗？
+
+```
+输入：nums = [100,4,200,1,3,2]
+输出：4
+解释：最长数字连续序列是 [1, 2, 3, 4]。它的长度为 4。
+```
+
+> 解法一：双set搜索或者单map (比较慢)
+
+```java
+    public int longestConsecutive(int[] nums) {
+        int maxLen = 0;
+        // 快速判断原始数组中是否存在某个元素
+        HashSet<Integer> set = new HashSet<>();
+        for(int num:nums)
+            set.add(num);
+        // 判断元素是否已经被并入过别的区间
+        HashSet<Integer> haveJudgeSet = new HashSet<>();
+        for(int num:set){
+            if(haveJudgeSet.contains(num))continue;
+            int len = 1;
+            // 本次后失效
+            haveJudgeSet.add(num);
+            int l = num-1;
+            int r = num+1;
+            // 向左查询
+            while (set.contains(l)&&!haveJudgeSet.contains(l)){
+                len++;
+                haveJudgeSet.add(l);
+                l--;
+            }
+            // 向右查询
+            while (set.contains(r)&&!haveJudgeSet.contains(r)){
+                len++;
+                haveJudgeSet.add(r);
+                r++;
+            }
+            // 更新最大值
+            maxLen = Math.max(maxLen,len);
+        }
+        return maxLen;
+    }
+```
+
+```java
+    public static int longestConsecutive_single_map(int[] nums) {
+        HashMap<Integer,Boolean> map = new HashMap<>();
+        for(int num:nums)
+            map.put(num,false);
+        int maxLen = 0;
+        for(int num:map.keySet()){
+            if(map.get(num)) continue;
+            // 移除本数
+            map.put(num,true);
+            int len = 1;
+            int l = num-1;
+            int r = num+1;
+            while (map.containsKey(l)&&!map.get(l)){
+                len++;
+                map.put(l,true);
+                l--;
+            }
+            while (map.containsKey(r)&&!map.get(r)){
+                len++;
+                map.put(r,true);
+                r++;
+            }
+            maxLen = Math.max(maxLen,len);
+        }
+        return maxLen;
+    }
+```
+
+本方法比较容易理解，时间复杂度也是O(n), 但由于双set的构造，导致整体时间和空间还是偏高。
+
+> 解法二：单set方法(快，只需要一半时间)
+
+```java
+    public static int longestConsecutive_single_set(int[] nums) {
+        HashSet<Integer> set = new HashSet<>();
+        for(int num:nums)
+            set.add(num);
+        int maxLen = 0;
+        // 本处不能用set迭代，会报错 concurrentModify 错误
+        for(int num:nums){
+            if(!set.contains(num))continue;
+            int len = 1;
+            int l = num-1;
+            int r = num+1;
+            while (set.contains(l)){
+                len++;
+                set.remove(l);
+                l--;
+            }
+            while (set.contains(r)){
+                len++;
+                set.remove(r);
+                r++;
+            }
+            maxLen = Math.max(maxLen,len);
+        }
+        return maxLen;
+    }
+```
+
+
+
 # 链表
 
 ## 0002. 两数相加
@@ -1145,6 +1257,60 @@ public int minDistance(String word1, String word2) {
 }
 ```
 
+## 0139.单词拆分(*)
+
+给定一个**非空**字符串 *s* 和一个包含**非空**单词的列表 *wordDict*，判定 *s* 是否可以被空格拆分为一个或多个在字典中出现的单词。
+
+```
+输入: s = "applepenapple", wordDict = ["apple", "pen"]
+输出: true
+解释: 返回 true 因为 "applepenapple" 可以被拆分成 "apple pen apple"。
+     注意你可以重复使用字典中的单词。
+```
+
+```
+输入: s = "catsandog", wordDict = ["cats", "dog", "sand", "and", "cat"]
+输出: false
+```
+
+> 解法一：动态规划
+>
+> 时间复杂度 : O(N^2)
+>
+> 空间复杂度: O(N)
+
+核心：
+
+ 本处实际上是移动j，使下面条件满足：
+
+1. str [0,j)  是已经验证过ok的
+2. str [j,i)  字符串存在于单词表中
+
+```java
+public static boolean wordBreak(String s, List<String> wordDict) {
+    Set<String> wordSet = new HashSet();
+    for(String str:wordDict)
+        wordSet.add(str);
+    boolean[] dp = new boolean[s.length()+1];
+    // "" 可以
+    dp[0] = true;
+    for(int i=1;i<dp.length;i++)
+        for(int j=0;j<i;j++)
+            // dp[j]指的是字符串j位前一位。 因为dp第一位是"".
+            // 本处实际上是移动j，使下面条件满足
+            // 1. [0,j-1]是已经验证过ok的
+            // 2. [j,i) 字符串存在于单词表中
+            if(dp[j]&&wordSet.contains(s.substring(j,i))) {
+                dp[i] = true;
+                // 只要找到一组，直接跳出
+                break;
+            }
+   return dp[s.length()];
+}
+```
+
+
+
 # 排序
 
 ## 0075.颜色分类(快排)
@@ -1473,6 +1639,75 @@ class Solution {
     }
 }
 ```
+
+## 0124.二叉树中的最大路径和(*)
+
+路径 被定义为一条从树中任意节点出发，沿父节点-子节点连接，达到任意节点的序列。同一个节点在一条路径序列中 至多出现一次 。该路径 至少包含一个 节点，且不一定经过根节点。
+
+路径和 是路径中各节点值的总和。
+
+给你一个二叉树的根节点 root ，返回其 最大路径和 。
+
+![](https://assets.leetcode.com/uploads/2020/10/13/exx2.jpg)
+
+```
+输入：root = [-10,9,20,null,null,15,7]
+输出：42
+解释：最优路径是 15 -> 20 -> 7 ，路径和为 15 + 20 + 7 = 42
+```
+
+> 解法一：递归
+
+可能来说，到本节点结束的话有 lmr = node.val+Math.max(left,0)+Math.max(right,0);
+
+如果选择左子树或右子树加上本节点往上传，则传递Math.max(lm,rm);
+
+```java
+public class A0124_MaxPathSum {
+    // 记录所有 l+m+r的最大值
+    int maxSum;
+    public int maxPathSum(TreeNode root) {
+        if(root==null) return 0;
+        maxSum = Integer.MIN_VALUE;
+        searchSum(root);
+        return maxSum;
+    }
+    int searchSum(TreeNode node){
+        if(node==null) return 0;
+        // 计算左子树能往上传的最大值
+        int left  = searchSum(node.left);
+        // 计算右子树能往上传的最大值
+        int right = searchSum(node.right);
+        // 左中上情况，判断是否加入左子树
+        int lm = node.val+Math.max(0,left);
+        // 右中上情况，判断是否加入右子树
+        int rm = node.val+Math.max(0,right);
+        // 左中右情况，判断是否加入左右子树
+        int lmr = node.val+Math.max(left,0)+Math.max(right,0);
+        // 记录左中右最大值
+        maxSum = Math.max(lmr,maxSum);
+        // 把左中和右中的最佳情况传递给父节点
+        return Math.max(lm,rm);
+    }
+}
+```
+
+# 二进制计算
+
+## 0136.只出现一次的数字
+
+给定一个**非空**整数数组，除了某个元素只出现一次以外，其余每个元素均出现两次。找出那个只出现了一次的元素。
+
+```
+输入: [4,1,2,1,2]
+输出: 4
+```
+
+> 解法一：所有元素异或
+>
+> 时间复杂度 : O(n)
+>
+> 空间复杂度: O(1)
 
 
 

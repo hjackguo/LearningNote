@@ -498,6 +498,107 @@ public ListNode mergeKLists(ListNode[] lists) {
 
 **此解法很妙！！！**
 
+## 0141.环形链表
+
+给定一个链表，判断链表中是否有环。
+
+![](https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/12/07/circularlinkedlist.png)
+
+> 解法一：快慢指针
+>
+> 时间复杂度: O(n)
+>
+> 空间复杂度: O(1)
+
+设置一个步长为1的指针，起始位为head
+
+设置一个步长为2的指针，起始位为head
+
+## 0142.环形链表II (*)
+
+给定一个链表，返回链表开始入环的第一个节点。 如果链表无环，则返回 `null`。
+
+![](https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/12/07/circularlinkedlist.png)
+
+```
+输入：head = [3,2,0,-4], pos = 1
+输出：返回索引为 1 的链表节点
+解释：链表中有一个环，其尾部连接到第二个节点。
+```
+
+> 解法一： 快慢指针
+>
+> 时间复杂度 O(n)
+>
+> 空间复杂度 O(1)
+
+![WeChatd61ba6bc2f92d9542d26dcd4bed1d146](https://picgohuanjie.oss-cn-beijing.aliyuncs.com/img/WeChatd61ba6bc2f92d9542d26dcd4bed1d146.png?x-oss-process=style/compress)设置fast指针指向head，步长为2
+
+设置slow指针指向head，步长为1
+
+1.  第一次相遇，fast走了 2l, slow走了1l
+2. 假设圆的周长c, 相遇的时，快指针比慢指针多走nc. 所以l = nc. 此时慢指针已经走了nc
+3. 环的入口，一定满足a+nc. 所以，慢指针再走a步就是环的入口
+4. 如何知道a？ 让fast指针回到开头，slow指针从原地走， 会在入口相遇！
+
+```java
+public ListNode detectCycle(ListNode head) {
+    if(head==null||head.next==null) return null;
+    ListNode fast = head;
+    ListNode slow = head;
+    while (slow!=null&&fast!=null&&fast.next!=null){
+        slow = slow.next;
+        fast = fast.next.next;
+        if(slow==fast) break;
+    }
+    if(fast!=slow) return null;
+    // 第一次相交了后，再走a
+    fast = head;
+    while (fast!=null&&slow!=null){
+        if(fast==slow) return fast;
+        fast = fast.next;
+        slow = slow.next;
+    }
+    return fast;
+}
+```
+
+## 0146.LRU缓存机制 (*)
+
+实现 LRUCache 类：
+
+LRUCache(int capacity) 以正整数作为容量 capacity 初始化 LRU 缓存
+int get(int key) 如果关键字 key 存在于缓存中，则返回关键字的值，否则返回 -1 。
+void put(int key, int value) 如果关键字已经存在，则变更其数据值；如果关键字不存在，则插入该组「关键字-值」。当缓存容量达到上限时，它应该在写入新数据之前删除最久未使用的数据值，从而为新的数据值留出空间。
+
+进阶：你是否可以在 O(1) 时间复杂度内完成这两种操作？
+
+```java
+输入
+["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]
+[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]
+输出
+[null, null, null, 1, null, -1, null, -1, 3, 4]
+
+解释
+LRUCache lRUCache = new LRUCache(2);
+lRUCache.put(1, 1); // 缓存是 {1=1}
+lRUCache.put(2, 2); // 缓存是 {1=1, 2=2}
+lRUCache.get(1);    // 返回 1
+lRUCache.put(3, 3); // 该操作会使得关键字 2 作废，缓存是 {1=1, 3=3}
+lRUCache.get(2);    // 返回 -1 (未找到)
+lRUCache.put(4, 4); // 该操作会使得关键字 1 作废，缓存是 {4=4, 3=3}
+lRUCache.get(1);    // 返回 -1 (未找到)
+lRUCache.get(3);    // 返回 3
+lRUCache.get(4);    // 返回 4
+```
+
+> 解法一： 哈希+链表
+
+![](https://pic.leetcode-cn.com/b84cf65debb43b28bd212787ca63d34c9962696ed427f638763be71a3cb8f89d.jpg)
+
+双向链表记得有头尾指针，同时node里面要存key和value， key用于删除时取出hashmap里面的节点索引。
+
 
 
 # 字符串
